@@ -7,704 +7,723 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --green-deep:   #0d3b2e;
-    --green-mid:    #1a6645;
-    --green-bright: #2dcc7a;
-    --green-soft:   #a8f0c6;
-    --amber:        #f5a623;
-    --red:          #e8453c;
-    --blue:         #4db8ff;
-    --soil-brown:   #8b5e3c;
-    --bg:           #071a12;
-    --card:         #0f2d1f;
-    --card2:        #102819;
-    --border:       rgba(45,204,122,0.18);
-    --text:         #e8f5ee;
-    --muted:        rgba(232,245,238,0.5);
-    --mono:         'Space Mono', monospace;
-    --sans:         'DM Sans', sans-serif;
-  }
-
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-  html { scroll-behavior: smooth; }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--sans);
-    font-size: 14px;
-    min-height: 100dvh;
-    overflow-x: hidden;
-  }
-
-  /* ── NOISE TEXTURE OVERLAY ── */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
-    pointer-events: none;
-    z-index: 0;
-    opacity: 0.5;
-  }
-
-  /* ── HEADER ── */
-  header {
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    background: rgba(7,26,18,0.92);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border-bottom: 1px solid var(--border);
-    padding: 12px 16px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-  }
-
-  .logo {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .logo-icon {
-    width: 36px; height: 36px;
-    background: var(--green-mid);
-    border-radius: 10px;
-    display: grid;
-    place-items: center;
-    font-size: 18px;
-    flex-shrink: 0;
-  }
-
-  .logo-text {
-    font-family: var(--mono);
-    font-size: 11px;
-    line-height: 1.3;
-  }
-
-  .logo-text strong {
-    display: block;
-    font-size: 13px;
-    color: var(--green-bright);
-    letter-spacing: 0.5px;
-  }
-
-  .header-right {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .status-dot {
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    background: var(--green-bright);
-    box-shadow: 0 0 8px var(--green-bright);
-    animation: pulse 2s infinite;
-    flex-shrink: 0;
-  }
-  .status-dot.offline { background: var(--red); box-shadow: 0 0 8px var(--red); animation: none; }
-  .status-dot.loading { background: var(--amber); box-shadow: 0 0 8px var(--amber); }
-
-  @keyframes pulse {
-    0%,100% { opacity: 1; transform: scale(1); }
-    50%      { opacity: 0.5; transform: scale(0.85); }
-  }
-
-  .refresh-btn {
-    background: var(--card);
-    border: 1px solid var(--border);
-    color: var(--text);
-    padding: 7px 13px;
-    border-radius: 8px;
-    font-family: var(--mono);
-    font-size: 10px;
-    cursor: pointer;
-    letter-spacing: 0.5px;
-    transition: all 0.2s;
-    white-space: nowrap;
-  }
-  .refresh-btn:active { transform: scale(0.96); background: var(--green-mid); }
-
-  /* ── MAIN LAYOUT ── */
-  main {
-    position: relative;
-    z-index: 1;
-    padding: 16px;
-    max-width: 480px;
-    margin: 0 auto;
-  }
-
-  /* ── SECTION LABEL ── */
-  .section-label {
-    font-family: var(--mono);
-    font-size: 9px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: var(--green-bright);
-    opacity: 0.7;
-    margin: 24px 0 10px;
-  }
-
-  /* ── HERO CARD ── */
-  .hero-card {
-    background: linear-gradient(135deg, var(--green-mid) 0%, var(--green-deep) 60%);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 20px;
-    position: relative;
-    overflow: hidden;
-    margin-bottom: 12px;
-  }
-
-  .hero-card::before {
-    content: '';
-    position: absolute;
-    top: -30px; right: -30px;
-    width: 120px; height: 120px;
-    background: radial-gradient(circle, rgba(45,204,122,0.25) 0%, transparent 70%);
-    pointer-events: none;
-  }
-
-  .hero-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 16px;
-  }
-
-  .hero-label {
-    font-family: var(--mono);
-    font-size: 9px;
-    letter-spacing: 2px;
-    color: var(--green-soft);
-    opacity: 0.7;
-    text-transform: uppercase;
-  }
-
-  .hero-decision {
-    font-family: var(--mono);
-    font-size: 11px;
-    padding: 4px 10px;
-    border-radius: 20px;
-    font-weight: 700;
-    letter-spacing: 1px;
-  }
-  .hero-decision.IRRIGATE {
-    background: rgba(77,184,255,0.2);
-    color: var(--blue);
-    border: 1px solid rgba(77,184,255,0.4);
-  }
-  .hero-decision.SKIP {
-    background: rgba(45,204,122,0.15);
-    color: var(--green-bright);
-    border: 1px solid rgba(45,204,122,0.3);
-  }
-
-  .hero-moisture {
-    display: flex;
-    align-items: flex-end;
-    gap: 6px;
-    margin-bottom: 4px;
-  }
-
-  .hero-moisture-val {
-    font-family: var(--mono);
-    font-size: 52px;
-    font-weight: 700;
-    line-height: 1;
-    color: var(--green-bright);
-    text-shadow: 0 0 30px rgba(45,204,122,0.4);
-  }
-
-  .hero-moisture-unit {
-    font-family: var(--mono);
-    font-size: 16px;
-    color: var(--green-soft);
-    margin-bottom: 8px;
-  }
-
-  .hero-moisture-label {
-    font-size: 12px;
-    color: var(--muted);
-    margin-bottom: 14px;
-  }
-
-  /* MOISTURE BAR */
-  .mbar-wrap {
-    background: rgba(0,0,0,0.3);
-    border-radius: 100px;
-    height: 8px;
-    overflow: hidden;
-    margin-bottom: 6px;
-  }
-
-  .mbar-fill {
-    height: 100%;
-    border-radius: 100px;
-    background: linear-gradient(90deg, var(--green-mid), var(--green-bright));
-    transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
-    position: relative;
-  }
-
-  .mbar-fill::after {
-    content: '';
-    position: absolute;
-    right: 0; top: 0; bottom: 0;
-    width: 12px;
-    background: white;
-    border-radius: 100px;
-    opacity: 0.6;
-  }
-
-  .mbar-threshold {
-    position: relative;
-    height: 0;
-  }
-
-  .mbar-threshold-line {
-    position: absolute;
-    top: -14px;
-    width: 2px;
-    height: 20px;
-    background: var(--amber);
-    border-radius: 2px;
-  }
-
-  .mbar-threshold-label {
-    position: absolute;
-    top: 8px;
-    font-family: var(--mono);
-    font-size: 8px;
-    color: var(--amber);
-    transform: translateX(-50%);
-    white-space: nowrap;
-  }
-
-  .hero-footer {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 14px;
-    padding-top: 14px;
-    border-top: 1px solid rgba(255,255,255,0.08);
-  }
-
-  .hero-mini {
-    text-align: center;
-  }
-
-  .hero-mini-val {
-    font-family: var(--mono);
-    font-size: 16px;
-    font-weight: 700;
-    color: var(--text);
-  }
-
-  .hero-mini-label {
-    font-size: 10px;
-    color: var(--muted);
-    margin-top: 2px;
-  }
-
-  /* ── STAT GRID ── */
-  .stat-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin-bottom: 12px;
-  }
-
-  .stat-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 14px;
-    position: relative;
-    overflow: hidden;
-    transition: border-color 0.2s;
-  }
-
-  .stat-card:active { border-color: var(--green-bright); }
-
-  .stat-card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, var(--border), transparent);
-  }
-
-  .stat-icon {
-    font-size: 18px;
-    margin-bottom: 8px;
-    display: block;
-  }
-
-  .stat-val {
-    font-family: var(--mono);
-    font-size: 22px;
-    font-weight: 700;
-    line-height: 1;
-    margin-bottom: 4px;
-  }
-
-  .stat-label {
-    font-size: 10px;
-    color: var(--muted);
-    line-height: 1.3;
-  }
-
-  .stat-unit {
-    font-size: 10px;
-    color: var(--muted);
-    margin-left: 2px;
-  }
-
-  /* ── WIDE CARD ── */
-  .wide-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 16px;
-    margin-bottom: 10px;
-  }
-
-  .wide-card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 14px;
-  }
-
-  .wide-card-title {
-    font-family: var(--mono);
-    font-size: 10px;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    color: var(--green-bright);
-    opacity: 0.8;
-  }
-
-  /* ── ET BARS ── */
-  .et-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 10px;
-  }
-
-  .et-label {
-    font-family: var(--mono);
-    font-size: 10px;
-    color: var(--muted);
-    width: 38px;
-    flex-shrink: 0;
-  }
-
-  .et-bar-wrap {
-    flex: 1;
-    background: rgba(0,0,0,0.3);
-    border-radius: 100px;
-    height: 6px;
-    overflow: hidden;
-  }
-
-  .et-bar-fill {
-    height: 100%;
-    border-radius: 100px;
-    transition: width 0.8s ease;
-  }
-  .et-bar-fill.et0  { background: linear-gradient(90deg, #1a6645, #2dcc7a); }
-  .et-bar-fill.etc  { background: linear-gradient(90deg, #4d6b1a, #a8cc2d); }
-  .et-bar-fill.loss { background: linear-gradient(90deg, #8b1a1a, #e8453c); }
-
-  .et-val {
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--text);
-    width: 52px;
-    text-align: right;
-    flex-shrink: 0;
-  }
-
-  /* ── WATER BALANCE ── */
-  .balance-display {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .balance-item {
-    flex: 1;
-    background: rgba(0,0,0,0.25);
-    border-radius: 12px;
-    padding: 12px 10px;
-    text-align: center;
-  }
-
-  .balance-val {
-    font-family: var(--mono);
-    font-size: 18px;
-    font-weight: 700;
-    line-height: 1;
-    margin-bottom: 4px;
-  }
-
-  .balance-label {
-    font-size: 9px;
-    color: var(--muted);
-    line-height: 1.3;
-  }
-
-  .balance-arrow {
-    color: var(--muted);
-    font-size: 18px;
-  }
-
-  /* ── TRIGGER BADGE ── */
-  .trigger-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 12px;
-    border-radius: 100px;
-    font-family: var(--mono);
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.5px;
-  }
-  .trigger-badge.NONE        { background: rgba(232,245,238,0.08); color: var(--muted); }
-  .trigger-badge.SOIL_DRY    { background: rgba(245,166,35,0.18);  color: var(--amber); border: 1px solid rgba(245,166,35,0.3); }
-  .trigger-badge.NET_LOSS    { background: rgba(232,69,60,0.18);   color: var(--red);   border: 1px solid rgba(232,69,60,0.3); }
-  .trigger-badge.MANUAL      { background: rgba(77,184,255,0.18);  color: var(--blue);  border: 1px solid rgba(77,184,255,0.3); }
-  .trigger-badge.BOTH        { background: rgba(232,69,60,0.18);   color: var(--red);   border: 1px solid rgba(232,69,60,0.3); }
-
-  /* ── PUMP INFO ── */
-  .pump-row {
-    display: flex;
-    justify-content: space-between;
-    padding: 10px 0;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
-  }
-  .pump-row:last-child { border-bottom: none; }
-
-  .pump-key {
-    font-size: 12px;
-    color: var(--muted);
-  }
-
-  .pump-val {
-    font-family: var(--mono);
-    font-size: 12px;
-    color: var(--text);
-    font-weight: 700;
-  }
-
-  /* ── HISTORY TABLE ── */
-  .history-scroll {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    margin: 0 -16px;
-    padding: 0 16px;
-  }
-
-  .history-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 11px;
-    min-width: 340px;
-  }
-
-  .history-table th {
-    font-family: var(--mono);
-    font-size: 9px;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    color: var(--muted);
-    padding: 6px 8px;
-    text-align: left;
-    border-bottom: 1px solid var(--border);
-    white-space: nowrap;
-  }
-
-  .history-table td {
-    padding: 8px 8px;
-    border-bottom: 1px solid rgba(255,255,255,0.04);
-    vertical-align: middle;
-  }
-
-  .history-table tr:last-child td { border-bottom: none; }
-
-  .history-table tr:hover td { background: rgba(45,204,122,0.04); }
-
-  .pill {
-    display: inline-block;
-    padding: 2px 7px;
-    border-radius: 100px;
-    font-family: var(--mono);
-    font-size: 9px;
-    font-weight: 700;
-  }
-  .pill.IRRIGATE { background: rgba(77,184,255,0.2);   color: var(--blue);  }
-  .pill.SKIP     { background: rgba(45,204,122,0.15);  color: var(--green-bright); }
-
-  /* ── TIMESTAMP ── */
-  .timestamp {
-    font-family: var(--mono);
-    font-size: 9px;
-    color: var(--muted);
-    letter-spacing: 0.5px;
-  }
-
-  /* ── LOADING SKELETON ── */
-  .skeleton {
-    background: linear-gradient(90deg, var(--card) 25%, rgba(45,204,122,0.08) 50%, var(--card) 75%);
-    background-size: 200% 100%;
-    animation: shimmer 1.5s infinite;
-    border-radius: 8px;
-    display: inline-block;
-  }
-
-  @keyframes shimmer {
-    0%   { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
-  }
-
-  /* ── ERROR STATE ── */
-  .error-banner {
-    background: rgba(232,69,60,0.12);
-    border: 1px solid rgba(232,69,60,0.3);
-    border-radius: 12px;
-    padding: 14px;
-    text-align: center;
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--red);
-    margin-bottom: 16px;
-    display: none;
-  }
-
-  /* ── FOOTER ── */
-  footer {
-    position: relative;
-    z-index: 1;
-    text-align: center;
-    padding: 20px 16px 36px;
-    font-family: var(--mono);
-    font-size: 9px;
-    color: var(--muted);
-    letter-spacing: 1px;
-  }
-
-  footer span { color: var(--green-bright); }
-
-  /* ── FADE-IN ANIMATION ── */
-  .fade-in {
-    opacity: 0;
-    transform: translateY(12px);
-    animation: fadeIn 0.5s ease forwards;
-  }
-
-  @keyframes fadeIn {
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  .fade-in:nth-child(1) { animation-delay: 0.05s; }
-  .fade-in:nth-child(2) { animation-delay: 0.1s; }
-  .fade-in:nth-child(3) { animation-delay: 0.15s; }
-  .fade-in:nth-child(4) { animation-delay: 0.2s; }
-  .fade-in:nth-child(5) { animation-delay: 0.25s; }
-
-  /* ── SPINNING REFRESH ── */
-  .spinning { animation: spin 1s linear infinite; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  .refresh-icon { display: inline-block; }
-
-  /* ── LAST UPDATED ── */
-  .last-updated {
-    font-family: var(--mono);
-    font-size: 9px;
-    color: var(--muted);
-    text-align: right;
-    margin-bottom: 8px;
-  }
-
-  /* ── GLOW ACCENTS ── */
-  .glow-green { color: var(--green-bright); }
-  .glow-amber { color: var(--amber); }
-  .glow-red   { color: var(--red); }
-  .glow-blue  { color: var(--blue); }
-
-  /* ── MINI CHART ── */
-  .mini-chart {
-    width: 100%;
-    height: 60px;
-    margin-top: 10px;
-  }
-
-  /* ── CROP TAG ── */
-  .crop-tag {
-    background: rgba(45,204,122,0.12);
-    border: 1px solid rgba(45,204,122,0.25);
-    border-radius: 100px;
-    padding: 3px 10px;
-    font-family: var(--mono);
-    font-size: 9px;
-    color: var(--green-bright);
-    letter-spacing: 0.5px;
-  }
+/* ══════════════════════════════════════════
+   TOKENS
+══════════════════════════════════════════ */
+:root {
+  --green-deep:   #0d3b2e;
+  --green-mid:    #1a6645;
+  --green-bright: #2dcc7a;
+  --green-soft:   #a8f0c6;
+  --amber:        #f5a623;
+  --red:          #e8453c;
+  --blue:         #4db8ff;
+  --bg:           #071a12;
+  --card:         #0f2d1f;
+  --border:       rgba(45,204,122,0.18);
+  --text:         #e8f5ee;
+  --muted:        rgba(232,245,238,0.5);
+  --mono:         'Space Mono', monospace;
+  --sans:         'DM Sans', sans-serif;
+  --nav-h:        60px;
+  --header-h:     52px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 14px;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  padding-bottom: var(--nav-h);
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.5;
+}
+
+/* ══════════════════════════════════════════
+   HEADER
+══════════════════════════════════════════ */
+header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  height: var(--header-h);
+  background: rgba(7,26,18,0.94);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logo { display: flex; align-items: center; gap: 10px; }
+
+.logo-icon {
+  width: 34px; height: 34px;
+  background: var(--green-mid);
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  font-size: 17px;
+  flex-shrink: 0;
+}
+
+.logo-text { font-family: var(--mono); font-size: 10px; line-height: 1.3; }
+.logo-text strong { display: block; font-size: 12px; color: var(--green-bright); letter-spacing: 0.5px; }
+
+.header-right { display: flex; align-items: center; gap: 10px; }
+
+.status-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  padding: 5px 10px;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.5px;
+}
+
+.status-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--green-bright);
+  box-shadow: 0 0 7px var(--green-bright);
+  animation: pulse 2s infinite;
+  flex-shrink: 0;
+}
+.status-dot.offline { background: var(--red);   box-shadow: 0 0 7px var(--red);   animation: none; }
+.status-dot.loading { background: var(--amber); box-shadow: 0 0 7px var(--amber); }
+
+@keyframes pulse {
+  0%,100% { opacity:1; transform:scale(1); }
+  50%      { opacity:0.5; transform:scale(0.8); }
+}
+
+/* ══════════════════════════════════════════
+   BOTTOM NAV
+══════════════════════════════════════════ */
+nav {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  z-index: 200;
+  height: var(--nav-h);
+  background: rgba(7,26,18,0.96);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-top: 1px solid var(--border);
+  display: flex;
+}
+
+.nav-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  background: none;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.2s;
+  -webkit-tap-highlight-color: transparent;
+  font-family: var(--sans);
+}
+
+.nav-btn.active { color: var(--green-bright); }
+
+.nav-icon { font-size: 20px; line-height: 1; }
+.nav-label { font-family: var(--mono); font-size: 8px; letter-spacing: 0.8px; text-transform: uppercase; }
+
+.nav-btn.active .nav-icon {
+  filter: drop-shadow(0 0 6px rgba(45,204,122,0.7));
+}
+
+/* ══════════════════════════════════════════
+   PAGES
+══════════════════════════════════════════ */
+.page { display: none; position: relative; z-index: 1; }
+.page.active { display: block; }
+
+main { padding: 14px 16px; max-width: 480px; margin: 0 auto; }
+
+/* ══════════════════════════════════════════
+   SHARED COMPONENTS
+══════════════════════════════════════════ */
+.section-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--green-bright);
+  opacity: 0.7;
+  margin: 20px 0 8px;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 10px;
+  position: relative;
+  overflow: hidden;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.card-title {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--green-bright);
+  opacity: 0.85;
+}
+
+.row-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 9px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.row-line:last-child { border-bottom: none; }
+.row-key  { font-size: 12px; color: var(--muted); }
+.row-val  { font-family: var(--mono); font-size: 12px; font-weight: 700; }
+
+.last-updated {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--muted);
+  text-align: right;
+  margin-bottom: 8px;
+}
+
+.error-banner {
+  background: rgba(232,69,60,0.12);
+  border: 1px solid rgba(232,69,60,0.3);
+  border-radius: 12px;
+  padding: 12px;
+  text-align: center;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--red);
+  margin-bottom: 12px;
+  display: none;
+}
+
+.glow-green { color: var(--green-bright); }
+.glow-amber { color: var(--amber); }
+.glow-red   { color: var(--red); }
+.glow-blue  { color: var(--blue); }
+
+/* ══════════════════════════════════════════
+   HERO CARD (Dashboard)
+══════════════════════════════════════════ */
+.hero-card {
+  background: linear-gradient(135deg, var(--green-mid) 0%, var(--green-deep) 65%);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.hero-card::before {
+  content: '';
+  position: absolute;
+  top: -40px; right: -40px;
+  width: 140px; height: 140px;
+  background: radial-gradient(circle, rgba(45,204,122,0.22) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.hero-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+
+.hero-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: var(--green-soft);
+  opacity: 0.7;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.hero-decision {
+  font-family: var(--mono);
+  font-size: 10px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+.hero-decision.IRRIGATE { background:rgba(77,184,255,0.2); color:var(--blue); border:1px solid rgba(77,184,255,0.4); }
+.hero-decision.SKIP     { background:rgba(45,204,122,0.15); color:var(--green-bright); border:1px solid rgba(45,204,122,0.3); }
+
+.hero-moisture { display:flex; align-items:flex-end; gap:6px; margin-bottom:4px; }
+.hero-moisture-val { font-family:var(--mono); font-size:54px; font-weight:700; line-height:1; color:var(--green-bright); text-shadow:0 0 30px rgba(45,204,122,0.4); }
+.hero-moisture-unit { font-family:var(--mono); font-size:16px; color:var(--green-soft); margin-bottom:8px; }
+.hero-moisture-sub { font-size:11px; color:var(--muted); margin-bottom:14px; }
+
+.mbar-wrap { background:rgba(0,0,0,0.3); border-radius:100px; height:8px; overflow:hidden; }
+.mbar-fill { height:100%; border-radius:100px; background:linear-gradient(90deg,var(--green-mid),var(--green-bright)); transition:width 0.8s cubic-bezier(0.34,1.56,0.64,1); position:relative; }
+.mbar-fill::after { content:''; position:absolute; right:0;top:0;bottom:0;width:10px;background:white;border-radius:100px;opacity:0.5; }
+.mbar-threshold { position:relative; height:0; }
+.mbar-threshold-line { position:absolute;top:-13px;width:2px;height:18px;background:var(--amber);border-radius:2px; }
+.mbar-threshold-label { position:absolute;top:7px;font-family:var(--mono);font-size:8px;color:var(--amber);transform:translateX(-50%);white-space:nowrap; }
+
+.hero-footer { display:flex; justify-content:space-between; margin-top:14px; padding-top:14px; border-top:1px solid rgba(255,255,255,0.08); }
+.hero-mini { text-align:center; }
+.hero-mini-val { font-family:var(--mono); font-size:15px; font-weight:700; }
+.hero-mini-label { font-size:9px; color:var(--muted); margin-top:2px; }
+
+/* stat grid */
+.stat-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px; }
+
+.stat-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 14px;
+  overflow: hidden;
+}
+
+.stat-icon  { font-size:18px; margin-bottom:8px; display:block; }
+.stat-val   { font-family:var(--mono); font-size:22px; font-weight:700; line-height:1; margin-bottom:4px; }
+.stat-unit  { font-size:10px; color:var(--muted); margin-left:2px; }
+.stat-label { font-size:10px; color:var(--muted); line-height:1.3; }
+
+/* et bars */
+.et-row { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+.et-label { font-family:var(--mono); font-size:10px; color:var(--muted); width:38px; flex-shrink:0; }
+.et-bar-wrap { flex:1; background:rgba(0,0,0,0.3); border-radius:100px; height:6px; overflow:hidden; }
+.et-bar-fill { height:100%; border-radius:100px; transition:width 0.8s ease; }
+.et-bar-fill.et0  { background:linear-gradient(90deg,#1a6645,#2dcc7a); }
+.et-bar-fill.etc  { background:linear-gradient(90deg,#4d6b1a,#a8cc2d); }
+.et-bar-fill.loss { background:linear-gradient(90deg,#8b1a1a,#e8453c); }
+.et-val { font-family:var(--mono); font-size:11px; width:55px; text-align:right; flex-shrink:0; }
+
+/* balance */
+.balance-display { display:flex; justify-content:space-between; align-items:center; gap:6px; }
+.balance-item { flex:1; background:rgba(0,0,0,0.25); border-radius:12px; padding:12px 8px; text-align:center; }
+.balance-val  { font-family:var(--mono); font-size:17px; font-weight:700; line-height:1; margin-bottom:4px; }
+.balance-label { font-size:9px; color:var(--muted); line-height:1.3; }
+.balance-arrow { color:var(--muted); font-size:16px; }
+
+/* trigger badge */
+.trigger-badge { display:inline-flex; align-items:center; gap:5px; padding:5px 11px; border-radius:100px; font-family:var(--mono); font-size:9px; font-weight:700; letter-spacing:0.5px; }
+.trigger-badge.NONE      { background:rgba(232,245,238,0.08); color:var(--muted); }
+.trigger-badge.SOIL_DRY  { background:rgba(245,166,35,0.18); color:var(--amber); border:1px solid rgba(245,166,35,0.3); }
+.trigger-badge.NET_LOSS  { background:rgba(232,69,60,0.18);  color:var(--red);   border:1px solid rgba(232,69,60,0.3); }
+.trigger-badge.MANUAL    { background:rgba(77,184,255,0.18); color:var(--blue);  border:1px solid rgba(77,184,255,0.3); }
+.trigger-badge.BOTH      { background:rgba(232,69,60,0.18);  color:var(--red);   border:1px solid rgba(232,69,60,0.3); }
+
+/* history table */
+.history-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; margin:0 -16px; padding:0 16px; }
+.history-table { width:100%; border-collapse:collapse; font-size:11px; min-width:320px; }
+.history-table th { font-family:var(--mono); font-size:9px; letter-spacing:1px; text-transform:uppercase; color:var(--muted); padding:8px; text-align:left; border-bottom:1px solid var(--border); white-space:nowrap; }
+.history-table td { padding:8px; border-bottom:1px solid rgba(255,255,255,0.04); vertical-align:middle; }
+.history-table tr:last-child td { border-bottom:none; }
+.pill { display:inline-block; padding:2px 7px; border-radius:100px; font-family:var(--mono); font-size:9px; font-weight:700; }
+.pill.IRRIGATE { background:rgba(77,184,255,0.2);  color:var(--blue); }
+.pill.SKIP     { background:rgba(45,204,122,0.15); color:var(--green-bright); }
+.timestamp     { font-family:var(--mono); font-size:9px; color:var(--muted); }
+
+/* ══════════════════════════════════════════
+   COMMAND PAGE
+══════════════════════════════════════════ */
+.mode-toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.mode-btn {
+  padding: 14px;
+  border-radius: 14px;
+  border: 2px solid var(--border);
+  background: rgba(0,0,0,0.2);
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mode-btn.active-auto  { border-color: var(--green-bright); color: var(--green-bright); background: rgba(45,204,122,0.1); }
+.mode-btn.active-manual { border-color: var(--amber); color: var(--amber); background: rgba(245,166,35,0.1); }
+
+.pump-control {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 20px 0 6px;
+}
+
+.big-pump-btn {
+  width: 110px; height: 110px;
+  border-radius: 50%;
+  border: 3px solid var(--border);
+  background: rgba(0,0,0,0.3);
+  color: var(--muted);
+  font-size: 36px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: all 0.2s;
+  -webkit-tap-highlight-color: transparent;
+  position: relative;
+}
+
+.big-pump-btn.on {
+  border-color: var(--blue);
+  background: rgba(77,184,255,0.12);
+  box-shadow: 0 0 30px rgba(77,184,255,0.25);
+  color: var(--blue);
+  animation: pump-pulse 1.5s infinite;
+}
+
+@keyframes pump-pulse {
+  0%,100% { box-shadow: 0 0 20px rgba(77,184,255,0.25); }
+  50%      { box-shadow: 0 0 40px rgba(77,184,255,0.5); }
+}
+
+.pump-status-label {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+.pump-status-label.on { color: var(--blue); }
+
+.duration-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.dur-btn {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text);
+  font-size: 18px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: all 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.dur-btn:active { background: var(--green-mid); transform: scale(0.92); }
+
+.dur-display {
+  font-family: var(--mono);
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text);
+  min-width: 80px;
+  text-align: center;
+}
+
+.dur-unit { font-size: 12px; color: var(--muted); }
+
+.send-btn {
+  width: 100%;
+  padding: 15px;
+  border-radius: 14px;
+  border: none;
+  background: linear-gradient(135deg, var(--green-mid), var(--green-bright));
+  color: #071a12;
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all 0.2s;
+  -webkit-tap-highlight-color: transparent;
+  margin-top: 8px;
+}
+
+.send-btn:active { transform: scale(0.97); opacity: 0.9; }
+.send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.send-btn.danger { background: linear-gradient(135deg, #8b1a1a, var(--red)); color: white; }
+
+.toast {
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--card);
+  border: 1px solid var(--green-bright);
+  color: var(--green-bright);
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 10px 18px;
+  border-radius: 100px;
+  opacity: 0;
+  transition: all 0.3s;
+  z-index: 300;
+  white-space: nowrap;
+  letter-spacing: 0.5px;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast.error { border-color: var(--red); color: var(--red); }
+
+/* ══════════════════════════════════════════
+   CONFIG PAGE
+══════════════════════════════════════════ */
+.config-item {
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.config-item:last-child { border-bottom: none; }
+
+.config-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.config-key { font-size: 13px; color: var(--text); font-weight: 500; }
+.config-desc { font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+.config-val-box {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--green-bright);
+  background: rgba(45,204,122,0.1);
+  border: 1px solid rgba(45,204,122,0.25);
+  border-radius: 8px;
+  padding: 4px 10px;
+  min-width: 60px;
+  text-align: right;
+}
+
+.config-input {
+  width: 100%;
+  background: rgba(0,0,0,0.3);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 13px;
+  margin-top: 8px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.config-input:focus { border-color: var(--green-bright); }
+
+.config-select {
+  width: 100%;
+  background: rgba(0,0,0,0.3);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 13px;
+  margin-top: 8px;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.config-select option { background: #0f2d1f; }
+
+.config-sync-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+/* ══════════════════════════════════════════
+   ABOUT PAGE
+══════════════════════════════════════════ */
+.about-hero {
+  background: linear-gradient(135deg, var(--green-mid), var(--green-deep));
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 28px 20px;
+  text-align: center;
+  margin-bottom: 12px;
+  position: relative;
+  overflow: hidden;
+}
+
+.about-hero::before {
+  content: '';
+  position: absolute;
+  top: -50px; left: 50%;
+  transform: translateX(-50%);
+  width: 200px; height: 200px;
+  background: radial-gradient(circle, rgba(45,204,122,0.2) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.about-emoji { font-size: 54px; margin-bottom: 12px; display: block; }
+.about-title { font-family: var(--mono); font-size: 16px; font-weight: 700; color: var(--green-bright); margin-bottom: 6px; letter-spacing: 1px; }
+.about-sub   { font-size: 12px; color: var(--muted); line-height: 1.5; }
+
+.version-badge {
+  display: inline-block;
+  background: rgba(45,204,122,0.15);
+  border: 1px solid rgba(45,204,122,0.3);
+  border-radius: 100px;
+  padding: 4px 12px;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--green-bright);
+  margin-top: 10px;
+  letter-spacing: 1px;
+}
+
+.about-spec {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  font-size: 12px;
+}
+.about-spec:last-child { border-bottom: none; }
+.about-spec-key { color: var(--muted); }
+.about-spec-val { font-family: var(--mono); font-size: 11px; color: var(--text); text-align: right; }
+
+.formula-block {
+  background: rgba(0,0,0,0.4);
+  border-radius: 12px;
+  padding: 14px;
+  font-family: var(--mono);
+  font-size: 10px;
+  line-height: 1.8;
+  color: var(--green-soft);
+  margin-top: 6px;
+  border: 1px solid rgba(45,204,122,0.1);
+}
+
+.formula-comment { color: var(--muted); font-size: 9px; }
+
+/* ══════════════════════════════════════════
+   UTILITIES
+══════════════════════════════════════════ */
+.spinning { animation: spin 1s linear infinite !important; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.fade-in { opacity:0; transform:translateY(10px); animation:fadeIn 0.4s ease forwards; }
+@keyframes fadeIn { to { opacity:1; transform:translateY(0); } }
+
+.crop-tag {
+  background: rgba(45,204,122,0.12);
+  border: 1px solid rgba(45,204,122,0.25);
+  border-radius: 100px;
+  padding: 3px 10px;
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--green-bright);
+  letter-spacing: 0.5px;
+}
+
+.divider { height: 1px; background: var(--border); margin: 4px 0 14px; }
+
+footer {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  padding: 16px;
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--muted);
+  letter-spacing: 1px;
+}
+footer span { color: var(--green-bright); }
 </style>
 </head>
 <body>
 
-<!-- ── HEADER ── -->
+<!-- ══════════════════════════════════════════
+     HEADER
+══════════════════════════════════════════ -->
 <header>
   <div class="logo">
     <div class="logo-icon">🍅</div>
     <div class="logo-text">
       <strong>TOMATO IRRIGATION</strong>
-      Smart Water System
+      Smart Water System v3.8
     </div>
   </div>
   <div class="header-right">
-    <div class="status-dot loading" id="statusDot"></div>
-    <button class="refresh-btn" onclick="loadData()" id="refreshBtn">
-      <span class="refresh-icon" id="refreshIcon">↻</span> REFRESH
-    </button>
+    <div class="status-pill">
+      <div class="status-dot loading" id="statusDot"></div>
+      <span id="statusText">—</span>
+    </div>
   </div>
 </header>
 
-<!-- ── MAIN ── -->
+<!-- ══════════════════════════════════════════
+     PAGE: DASHBOARD
+══════════════════════════════════════════ -->
+<div class="page active" id="page-dashboard">
 <main>
-
-  <div class="error-banner" id="errorBanner">⚠ Unable to fetch data. Check connection.</div>
-
+  <div class="error-banner" id="dbError"></div>
   <div class="last-updated" id="lastUpdated">Fetching data…</div>
 
-  <!-- ── HERO: SOIL MOISTURE ── -->
-  <div class="hero-card fade-in" id="heroCard">
+  <!-- Hero -->
+  <div class="hero-card fade-in">
     <div class="hero-top">
       <div>
         <div class="hero-label">Soil Moisture</div>
-        <div class="crop-tag" id="cropTag">— / —</div>
+        <div class="crop-tag" id="cropTag">🍅 —</div>
       </div>
       <div class="hero-decision SKIP" id="heroDecision">—</div>
     </div>
-
     <div class="hero-moisture">
       <div class="hero-moisture-val" id="moistureVal">--</div>
       <div class="hero-moisture-unit">%</div>
     </div>
-    <div class="hero-moisture-label">Current soil moisture level</div>
-
+    <div class="hero-moisture-sub">Current soil moisture level</div>
     <div class="mbar-wrap">
       <div class="mbar-fill" id="moistureBar" style="width:0%"></div>
     </div>
@@ -712,11 +731,10 @@
       <div class="mbar-threshold-line" id="thresholdLine" style="left:45%"></div>
       <div class="mbar-threshold-label" id="thresholdLabel" style="left:45%">45% threshold</div>
     </div>
-
     <div class="hero-footer">
       <div class="hero-mini">
         <div class="hero-mini-val glow-amber" id="tempVal">--°C</div>
-        <div class="hero-mini-label">Temperature</div>
+        <div class="hero-mini-label">Temp</div>
       </div>
       <div class="hero-mini">
         <div class="hero-mini-val glow-blue" id="humVal">--%</div>
@@ -733,39 +751,56 @@
     </div>
   </div>
 
-  <!-- ── TRIGGER + PUMP INFO ── -->
-  <div class="wide-card fade-in" id="pumpCard">
-    <div class="wide-card-header">
-      <div class="wide-card-title">Last Decision</div>
-      <div class="trigger-badge NONE" id="triggerBadge">⬡ NONE</div>
+  <!-- Stat grid -->
+  <div class="stat-grid fade-in">
+    <div class="stat-card">
+      <span class="stat-icon">☀️</span>
+      <div class="stat-val glow-amber" id="solarVal">--<span class="stat-unit">W/m²</span></div>
+      <div class="stat-label">Solar Radiance</div>
     </div>
-    <div id="pumpRows">
-      <div class="pump-row">
-        <div class="pump-key">Duration</div>
-        <div class="pump-val" id="pumpDur">-- sec</div>
-      </div>
-      <div class="pump-row">
-        <div class="pump-key">Volume</div>
-        <div class="pump-val" id="pumpVol">-- L</div>
-      </div>
-      <div class="pump-row">
-        <div class="pump-key">Applied</div>
-        <div class="pump-val" id="pumpMM">-- mm</div>
-      </div>
-      <div class="pump-row">
-        <div class="pump-key">Pressure</div>
-        <div class="pump-val" id="pressureVal">-- hPa</div>
-      </div>
+    <div class="stat-card">
+      <span class="stat-icon">🌡️</span>
+      <div class="stat-val" id="pressureVal">--<span class="stat-unit">hPa</span></div>
+      <div class="stat-label">Pressure</div>
+    </div>
+    <div class="stat-card">
+      <span class="stat-icon">💧</span>
+      <div class="stat-val glow-blue" id="irrigVolVal">--<span class="stat-unit">L</span></div>
+      <div class="stat-label">Last Irrigation Vol.</div>
+    </div>
+    <div class="stat-card">
+      <span class="stat-icon">⏱️</span>
+      <div class="stat-val glow-green" id="irrigSecVal">--<span class="stat-unit">sec</span></div>
+      <div class="stat-label">Pump Duration</div>
     </div>
   </div>
 
-  <!-- ── ET STATS ── -->
-  <div class="wide-card fade-in">
-    <div class="wide-card-header">
-      <div class="wide-card-title">Evapotranspiration</div>
+  <!-- Last decision -->
+  <div class="card fade-in">
+    <div class="card-header">
+      <div class="card-title">Last Decision</div>
+      <div class="trigger-badge NONE" id="triggerBadge">⬡ NONE</div>
+    </div>
+    <div class="row-line">
+      <div class="row-key">Decision</div>
+      <div class="row-val" id="decisionVal">—</div>
+    </div>
+    <div class="row-line">
+      <div class="row-key">Irrigation Applied</div>
+      <div class="row-val" id="irrigMMVal">— mm</div>
+    </div>
+    <div class="row-line">
+      <div class="row-key">Record ID</div>
+      <div class="row-val" id="recordIdVal" style="font-size:9px;color:var(--muted)">—</div>
+    </div>
+  </div>
+
+  <!-- ET -->
+  <div class="card fade-in">
+    <div class="card-header">
+      <div class="card-title">Evapotranspiration</div>
       <div class="timestamp" id="etTimestamp">—</div>
     </div>
-
     <div class="et-row">
       <div class="et-label">ET₀</div>
       <div class="et-bar-wrap"><div class="et-bar-fill et0" id="et0Bar" style="width:0%"></div></div>
@@ -783,15 +818,13 @@
     </div>
   </div>
 
-  <!-- ── WATER BALANCE ── -->
-  <div class="wide-card fade-in">
-    <div class="wide-card-header">
-      <div class="wide-card-title">Solid State Balance</div>
-    </div>
+  <!-- Water balance -->
+  <div class="card fade-in">
+    <div class="card-header"><div class="card-title">Solid State Balance</div></div>
     <div class="balance-display">
       <div class="balance-item">
         <div class="balance-val glow-amber" id="prevSS">--</div>
-        <div class="balance-label">Previous<br>State (mm)</div>
+        <div class="balance-label">Previous<br>(mm)</div>
       </div>
       <div class="balance-arrow">→</div>
       <div class="balance-item">
@@ -806,76 +839,285 @@
     </div>
   </div>
 
-  <!-- ── HISTORY ── -->
+  <!-- History -->
   <div class="section-label">Recent Log</div>
-  <div class="wide-card fade-in" style="padding: 0 0 4px;">
+  <div class="card fade-in" style="padding:0 0 4px;">
     <div class="history-scroll">
       <table class="history-table">
         <thead>
           <tr>
-            <th>Time</th>
-            <th>Soil%</th>
-            <th>ETc</th>
-            <th>Net</th>
-            <th>Decision</th>
+            <th>Time</th><th>Soil%</th><th>ETc</th><th>Net</th><th>Decision</th>
           </tr>
         </thead>
         <tbody id="historyBody">
-          <tr>
-            <td colspan="5" style="text-align:center; color:var(--muted); padding:20px; font-family:var(--mono); font-size:10px;">Loading…</td>
-          </tr>
+          <tr><td colspan="5" style="text-align:center;color:var(--muted);padding:20px;font-family:var(--mono);font-size:10px;">Loading…</td></tr>
         </tbody>
       </table>
     </div>
   </div>
 
+  <footer><span>PLOT_1</span> · ESP32_001 · <span>Tomato</span><br>Lat 8.9586 · Lon 125.5958</footer>
 </main>
+</div>
 
-<footer>
-  <span><span>PLOT_1</span> · ESP32_001 · <span>Tomato</span></span><br>
-  Lat 8.9586 · Lon 125.5958
-</footer>
+<!-- ══════════════════════════════════════════
+     PAGE: COMMAND
+══════════════════════════════════════════ -->
+<div class="page" id="page-command">
+<main>
+  <div class="section-label">System Mode</div>
+  <div class="card fade-in">
+    <div class="mode-toggle">
+      <button class="mode-btn" id="btnAuto" onclick="setMode('AUTO')">🤖 AUTO</button>
+      <button class="mode-btn" id="btnManual" onclick="setMode('MANUAL')">🖐 MANUAL</button>
+    </div>
+    <div class="row-line">
+      <div class="row-key">Current Mode</div>
+      <div class="row-val" id="cmdCurrentMode">—</div>
+    </div>
+    <div class="row-line">
+      <div class="row-key">Manual Status</div>
+      <div class="row-val" id="cmdManualStatus">—</div>
+    </div>
+  </div>
 
+  <div class="section-label">Pump Control</div>
+  <div class="card fade-in">
+    <div class="pump-control">
+      <button class="big-pump-btn" id="bigPumpBtn" onclick="togglePump()">💧</button>
+      <div class="pump-status-label" id="pumpStatusLabel">PUMP OFF</div>
+    </div>
+    <div class="divider"></div>
+    <div style="font-family:var(--mono);font-size:9px;color:var(--muted);text-align:center;margin-bottom:10px;letter-spacing:1px;">MANUAL DURATION</div>
+    <div class="duration-row">
+      <button class="dur-btn" onclick="adjustDur(-10)">−</button>
+      <div>
+        <div class="dur-display"><span id="durVal">30</span><span class="dur-unit"> sec</span></div>
+      </div>
+      <button class="dur-btn" onclick="adjustDur(10)">+</button>
+    </div>
+    <button class="send-btn" onclick="applyDuration()" style="margin-top:14px;">✓ APPLY DURATION TO SHEET</button>
+  </div>
+
+  <div class="section-label">Quick Actions</div>
+  <div class="card fade-in">
+    <div class="row-line">
+      <div class="row-key">Last pump trigger</div>
+      <div class="row-val" id="cmdLastTrigger">—</div>
+    </div>
+    <div class="row-line">
+      <div class="row-key">Last duration</div>
+      <div class="row-val" id="cmdLastDur">—</div>
+    </div>
+    <div class="row-line">
+      <div class="row-key">Last volume</div>
+      <div class="row-val" id="cmdLastVol">—</div>
+    </div>
+  </div>
+
+  <div style="padding:0 0 16px;">
+    <div class="send-btn danger" onclick="emergencySkip()" style="display:block;text-align:center;cursor:pointer;border-radius:14px;padding:15px;">⛔ FORCE SKIP NEXT CYCLE</div>
+  </div>
+
+  <footer><span>Commands sync to Config sheet</span><br>Google Sheets · Real-time</footer>
+</main>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PAGE: CONFIG
+══════════════════════════════════════════ -->
+<div class="page" id="page-config">
+<main>
+  <div class="last-updated" id="cfgLastUpdated">Loading config…</div>
+  <div class="error-banner" id="cfgError"></div>
+
+  <div class="section-label">Thresholds</div>
+  <div class="card fade-in" id="cfgThresholds">
+    <!-- injected by JS -->
+    <div style="text-align:center;padding:20px;font-family:var(--mono);font-size:10px;color:var(--muted);">Loading…</div>
+  </div>
+
+  <div class="section-label">Irrigation Parameters</div>
+  <div class="card fade-in" id="cfgIrrigation">
+    <div style="text-align:center;padding:20px;font-family:var(--mono);font-size:10px;color:var(--muted);">Loading…</div>
+  </div>
+
+  <div class="section-label">Crop Settings</div>
+  <div class="card fade-in" id="cfgCrop">
+    <div style="text-align:center;padding:20px;font-family:var(--mono);font-size:10px;color:var(--muted);">Loading…</div>
+  </div>
+
+  <div style="padding:0 0 20px;">
+    <button class="send-btn" onclick="saveConfig()">💾 SAVE ALL CHANGES TO SHEET</button>
+  </div>
+
+  <footer><span>Config sheet</span> · Changes write directly<br>to Google Sheets via Apps Script</footer>
+</main>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PAGE: ABOUT
+══════════════════════════════════════════ -->
+<div class="page" id="page-about">
+<main>
+  <div class="about-hero fade-in">
+    <span class="about-emoji">🍅</span>
+    <div class="about-title">TOMATO SMART IRRIGATION</div>
+    <div class="about-sub">Automated water management system<br>powered by FAO-56 Penman-Monteith<br>evapotranspiration model</div>
+    <div class="version-badge">FIRMWARE v3.8 · FINAL</div>
+  </div>
+
+  <div class="section-label">System Specs</div>
+  <div class="card fade-in">
+    <div class="about-spec"><span class="about-spec-key">Device</span><span class="about-spec-val">ESP32_001</span></div>
+    <div class="about-spec"><span class="about-spec-key">Plot</span><span class="about-spec-val">PLOT_1</span></div>
+    <div class="about-spec"><span class="about-spec-key">Location</span><span class="about-spec-val">8.9586°N, 125.5958°E</span></div>
+    <div class="about-spec"><span class="about-spec-key">Crop</span><span class="about-spec-val">Tomato (Solanum lycopersicum)</span></div>
+    <div class="about-spec"><span class="about-spec-key">Kc (Vegetative)</span><span class="about-spec-val" id="aboutKc">—</span></div>
+    <div class="about-spec"><span class="about-spec-key">Flow Rate</span><span class="about-spec-val" id="aboutFlow">—</span></div>
+    <div class="about-spec"><span class="about-spec-key">Plot Area</span><span class="about-spec-val" id="aboutArea">—</span></div>
+    <div class="about-spec"><span class="about-spec-key">Log Interval</span><span class="about-spec-val">1 minute</span></div>
+    <div class="about-spec"><span class="about-spec-key">Log Sheet</span><span class="about-spec-val">Logs_1min</span></div>
+    <div class="about-spec"><span class="about-spec-key">Dashboard Refresh</span><span class="about-spec-val">Every 60 sec</span></div>
+  </div>
+
+  <div class="section-label">ET₀ Formula (FAO-56)</div>
+  <div class="card fade-in">
+    <div class="about-sub" style="margin-bottom:10px;font-size:11px;">Reference evapotranspiration using Penman-Monteith equation adapted for 1-minute intervals.</div>
+    <div class="formula-block">
+<span class="formula-comment">// Wind: km/h → m/s</span>
+wind_ms = wind_kmh / 3.6
+
+<span class="formula-comment">// Net radiation (1-min interval)</span>
+Rn = solar_Wm2 × 0.0036 × (1/60)
+
+<span class="formula-comment">// Saturation vapour pressure</span>
+es = 0.6108 × exp(17.27T / T+237.3)
+ea = es × (RH/100)
+vpd = max(es − ea, 0)
+
+<span class="formula-comment">// Slope of saturation curve</span>
+Δ = 4098 × es / (T+237.3)²
+
+<span class="formula-comment">// Psychrometric constant</span>
+γ = 0.0665
+
+<span class="formula-comment">// ET₀ result (mm/min)</span>
+ET₀ = (0.408ΔRn + γ·(900/T+273)·u·vpd)
+       / (Δ + γ·(1 + 0.34u))
+
+<span class="formula-comment">// Crop ET</span>
+ETc = ET₀ × Kc
+    </div>
+  </div>
+
+  <div class="section-label">Decision Logic</div>
+  <div class="card fade-in">
+    <div class="row-line"><div class="row-key">SOIL_DRY</div><div class="row-val" style="font-size:11px;">Soil % &lt; threshold</div></div>
+    <div class="row-line"><div class="row-key">NET_LOSS</div><div class="row-val" style="font-size:11px;">solidBefore &gt; net_loss_threshold</div></div>
+    <div class="row-line"><div class="row-key">BOTH</div><div class="row-val" style="font-size:11px;">SOIL_DRY + NET_LOSS</div></div>
+    <div class="row-line"><div class="row-key">MANUAL</div><div class="row-val" style="font-size:11px;">system_mode = MANUAL, status = ON</div></div>
+    <div class="row-line"><div class="row-key">NONE</div><div class="row-val" style="font-size:11px;">No trigger, SKIP decision</div></div>
+  </div>
+
+  <div class="section-label">Data Sources</div>
+  <div class="card fade-in">
+    <div class="row-line"><div class="row-key">Sensor</div><div class="row-val" style="font-size:11px;">ESP32 + DHT/Soil probe</div></div>
+    <div class="row-line"><div class="row-key">Solar</div><div class="row-val" style="font-size:11px;">open-meteo.com API</div></div>
+    <div class="row-line"><div class="row-key">Storage</div><div class="row-val" style="font-size:11px;">Google Sheets</div></div>
+    <div class="row-line"><div class="row-key">Backend</div><div class="row-val" style="font-size:11px;">Google Apps Script</div></div>
+    <div class="row-line"><div class="row-key">Frontend</div><div class="row-val" style="font-size:11px;">GitHub Pages</div></div>
+  </div>
+
+  <footer><span>Tomato Smart Irrigation</span><br>Built with ❤️ · FAO-56 Standard</footer>
+</main>
+</div>
+
+<!-- ══════════════════════════════════════════
+     BOTTOM NAV
+══════════════════════════════════════════ -->
+<nav>
+  <button class="nav-btn active" id="nav-dashboard" onclick="goTo('dashboard')">
+    <span class="nav-icon">📊</span>
+    <span class="nav-label">Dashboard</span>
+  </button>
+  <button class="nav-btn" id="nav-command" onclick="goTo('command')">
+    <span class="nav-icon">🎛️</span>
+    <span class="nav-label">Command</span>
+  </button>
+  <button class="nav-btn" id="nav-config" onclick="goTo('config')">
+    <span class="nav-icon">⚙️</span>
+    <span class="nav-label">Config</span>
+  </button>
+  <button class="nav-btn" id="nav-about" onclick="goTo('about')">
+    <span class="nav-icon">ℹ️</span>
+    <span class="nav-label">About</span>
+  </button>
+</nav>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- ══════════════════════════════════════════
+     SCRIPT
+══════════════════════════════════════════ -->
 <script>
-// ── CONFIG ──
-const SHEET_ID  = "1fR-ZPti2hilTDtp2LSND9CzkA3eaYqfjgWpTbqmzEVg";
-const LOG_SHEET = "Logs_1min";
-const ROWS_BACK = 20; // last N rows to fetch
+// ══ CONSTANTS ══
+const SHEET_ID   = "1fR-ZPti2hilTDtp2LSND9CzkA3eaYqfjgWpTbqmzEVg";
+const LOG_SHEET  = "Logs_1min";
+const CFG_SHEET  = "Config";
+const PUMP_SHEET = "PumpLog";
+const ROWS_BACK  = 20;
 
-// ── Column indices (0-based) matching the script ──
+// Your Apps Script Web App URL — paste it here after deploying
+const APPS_SCRIPT_URL = "YOUR_APPS_SCRIPT_WEB_APP_URL_HERE";
+
+// Column map (0-based, from your GAS code)
 const C = {
-  record_id:    0,  // A
-  timestamp:    1,  // B
-  device_id:    2,  // C
-  plot_id:      3,  // D
-  crop_stage:   4,  // E
-  temp:         5,  // F
-  humidity:     6,  // G
-  wind:         7,  // H
-  pressure:     8,  // I
-  solar:        9,  // J
-  soil:         10, // K
-  rainfall:     11, // L
-  et0:          12, // M
-  etc:          13, // N
-  net_loss:     14, // O
-  prev_ss:      15, // P
-  before_ss:    16, // Q
-  after_ss:     17, // R
-  trigger:      18, // S
-  decision:     19, // T
-  irrig_sec:    20, // U
-  irrig_vol:    21, // V
-  irrig_mm:     22, // W
+  record_id:0, timestamp:1, device_id:2, plot_id:3, crop_stage:4,
+  temp:5, humidity:6, wind:7, pressure:8, solar:9,
+  soil:10, rainfall:11, et0:12, etc:13, net_loss:14,
+  prev_ss:15, before_ss:16, after_ss:17,
+  trigger:18, decision:19, irrig_sec:20, irrig_vol:21, irrig_mm:22
 };
 
+// Config column map (0-based): param | value | description
+const CC = { param:0, value:1, desc:2 };
+
+// ══ STATE ══
+let currentPage   = 'dashboard';
+let manualDurSec  = 30;
+let pumpOn        = false;
+let configRows    = [];
+let cfgDirty      = {};
+
+// ══════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════
+function goTo(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  document.getElementById('nav-' + page).classList.add('active');
+  currentPage = page;
+
+  // Lazy-load config when switching to config page
+  if (page === 'config' && configRows.length === 0) loadConfig();
+}
+
+// ══════════════════════════════════════════
+// GVIZ HELPER
+// ══════════════════════════════════════════
 function gvizUrl(sheetName, limit) {
   const q = encodeURIComponent(`SELECT * ORDER BY B DESC LIMIT ${limit}`);
   return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}&tq=${q}`;
 }
 
+function gvizUrlRaw(sheetName) {
+  return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`;
+}
+
 function parseGviz(raw) {
-  // Strip the callback wrapper google adds
   const json = raw.replace(/^[^{]+/, '').replace(/[^}]+$/, '');
   return JSON.parse(json);
 }
@@ -889,183 +1131,447 @@ function cellVal(cell) {
 function fmt(v, decimals = 2) {
   if (v === null || v === undefined || v === '') return '--';
   const n = Number(v);
-  if (isNaN(n)) return v;
+  if (isNaN(n)) return String(v);
   return n.toFixed(decimals);
 }
 
-async function loadData() {
-  const dot  = document.getElementById('statusDot');
-  const icon = document.getElementById('refreshIcon');
-  const err  = document.getElementById('errorBanner');
+function fmtTime(raw) {
+  if (!raw) return '--';
+  try {
+    return new Date(raw).toLocaleString('en-PH', {
+      month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'
+    });
+  } catch(_) { return '--'; }
+}
 
-  dot.className  = 'status-dot loading';
-  icon.className = 'refresh-icon spinning';
-  err.style.display = 'none';
+// ══════════════════════════════════════════
+// STATUS DOT
+// ══════════════════════════════════════════
+function setStatus(state, text) {
+  const dot = document.getElementById('statusDot');
+  const txt = document.getElementById('statusText');
+  dot.className = 'status-dot ' + (state || '');
+  txt.textContent = text || '—';
+}
+
+// ══════════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════════
+function showToast(msg, isError) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (isError ? ' error' : '');
+  setTimeout(() => { t.className = 'toast'; }, 2800);
+}
+
+// ══════════════════════════════════════════
+// LOAD DASHBOARD
+// ══════════════════════════════════════════
+async function loadData() {
+  setStatus('loading', 'Syncing…');
+  const errEl = document.getElementById('dbError');
+  errEl.style.display = 'none';
 
   try {
-    const url  = gvizUrl(LOG_SHEET, ROWS_BACK);
-    const resp = await fetch(url);
+    const resp = await fetch(gvizUrl(LOG_SHEET, ROWS_BACK));
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
     const raw  = await resp.text();
     const data = parseGviz(raw);
     const rows = data.table.rows;
-
-    if (!rows || rows.length === 0) throw new Error('No data rows');
+    if (!rows || rows.length === 0) throw new Error('No data in sheet');
 
     renderDashboard(rows);
-
-    dot.className  = 'status-dot';
+    setStatus('', 'ONLINE');
     document.getElementById('lastUpdated').textContent =
-      'Updated ' + new Date().toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      'Updated ' + new Date().toLocaleTimeString('en-PH', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
 
-  } catch (e) {
+    // Also update command page quick info from same data
+    updateCommandInfo(rows[0].c);
+
+  } catch(e) {
     console.error(e);
-    dot.className = 'status-dot offline';
-    err.style.display = 'block';
-    err.textContent   = '⚠ ' + e.message;
-    document.getElementById('lastUpdated').textContent = 'Failed to load data';
-  } finally {
-    icon.className = 'refresh-icon';
+    setStatus('offline', 'OFFLINE');
+    errEl.style.display = 'block';
+    errEl.textContent   = '⚠ ' + e.message;
+    document.getElementById('lastUpdated').textContent = 'Failed to load';
   }
 }
 
+// ══════════════════════════════════════════
+// RENDER DASHBOARD
+// ══════════════════════════════════════════
 function renderDashboard(rows) {
-  // rows[0] = most recent (we sorted DESC)
   const r   = rows[0].c;
-  const get = (idx) => cellVal(r[idx]);
+  const get = (i) => cellVal(r[i]);
 
-  // ── Hero: soil moisture ──
+  // Hero
   const soil = Number(get(C.soil)) || 0;
   document.getElementById('moistureVal').textContent = fmt(soil, 1);
+  document.getElementById('moistureBar').style.width = Math.min(soil,100) + '%';
 
-  const mbarFill = Math.min(soil, 100);
-  document.getElementById('moistureBar').style.width = mbarFill + '%';
-
-  // threshold line (default 45%)
   const thresh = 45;
   document.getElementById('thresholdLine').style.left  = thresh + '%';
   document.getElementById('thresholdLabel').style.left = thresh + '%';
   document.getElementById('thresholdLabel').textContent = thresh + '% threshold';
 
-  // crop stage
   const stage = get(C.crop_stage) || 'Vegetative';
   document.getElementById('cropTag').textContent = '🍅 ' + stage;
 
-  // Decision badge
   const dec = (get(C.decision) || 'SKIP').trim().toUpperCase();
   const decEl = document.getElementById('heroDecision');
-  decEl.textContent  = dec === 'IRRIGATE' ? '💧 IRRIGATE' : '✓ SKIP';
-  decEl.className    = 'hero-decision ' + dec;
+  decEl.textContent = dec === 'IRRIGATE' ? '💧 IRRIGATE' : '✓ SKIP';
+  decEl.className   = 'hero-decision ' + dec;
 
-  // Weather
-  document.getElementById('tempVal').textContent  = fmt(get(C.temp), 1)  + '°C';
-  document.getElementById('humVal').textContent   = fmt(get(C.humidity), 0) + '%';
-  document.getElementById('rainVal').textContent  = fmt(get(C.rainfall), 1) + ' mm';
-  document.getElementById('windVal').textContent  = fmt(get(C.wind), 1)  + ' km/h';
+  document.getElementById('tempVal').textContent  = fmt(get(C.temp),1) + '°C';
+  document.getElementById('humVal').textContent   = fmt(get(C.humidity),0) + '%';
+  document.getElementById('rainVal').textContent  = fmt(get(C.rainfall),1) + ' mm';
+  document.getElementById('windVal').textContent  = fmt(get(C.wind),1) + ' km/h';
 
-  // ── Trigger badge ──
-  const trig     = (get(C.trigger) || 'NONE').toString().toUpperCase();
-  const trigEl   = document.getElementById('triggerBadge');
-  let trigClass  = 'NONE';
-  let trigIcon   = '⬡';
+  // Stats
+  document.getElementById('solarVal').innerHTML    = fmt(get(C.solar),0) + '<span class="stat-unit">W/m²</span>';
+  document.getElementById('pressureVal').innerHTML = fmt(get(C.pressure),1) + '<span class="stat-unit">hPa</span>';
+  document.getElementById('irrigVolVal').innerHTML = fmt(get(C.irrig_vol),3) + '<span class="stat-unit">L</span>';
+  document.getElementById('irrigSecVal').innerHTML = fmt(get(C.irrig_sec),0) + '<span class="stat-unit">sec</span>';
 
-  if (trig.includes('SOIL_DRY') && trig.includes('NET_LOSS')) {
-    trigClass = 'BOTH'; trigIcon = '⚡';
-  } else if (trig.includes('SOIL_DRY')) {
-    trigClass = 'SOIL_DRY'; trigIcon = '🌵';
-  } else if (trig.includes('NET_LOSS')) {
-    trigClass = 'NET_LOSS'; trigIcon = '📉';
-  } else if (trig.includes('MANUAL')) {
-    trigClass = 'MANUAL'; trigIcon = '🖐';
-  }
-
+  // Trigger badge
+  const trig    = (get(C.trigger) || 'NONE').toString().toUpperCase();
+  const trigEl  = document.getElementById('triggerBadge');
+  let trigClass = 'NONE', trigIcon = '⬡';
+  if (trig.includes('SOIL_DRY') && trig.includes('NET_LOSS')) { trigClass='BOTH';     trigIcon='⚡'; }
+  else if (trig.includes('SOIL_DRY'))  { trigClass='SOIL_DRY'; trigIcon='🌵'; }
+  else if (trig.includes('NET_LOSS'))  { trigClass='NET_LOSS'; trigIcon='📉'; }
+  else if (trig.includes('MANUAL'))    { trigClass='MANUAL';   trigIcon='🖐'; }
   trigEl.className   = 'trigger-badge ' + trigClass;
   trigEl.textContent = trigIcon + ' ' + trig.replace(' [CAPPED]','');
 
-  // ── Pump info ──
-  document.getElementById('pumpDur').textContent  = fmt(get(C.irrig_sec), 0)  + ' sec';
-  document.getElementById('pumpVol').textContent  = fmt(get(C.irrig_vol), 3)  + ' L';
-  document.getElementById('pumpMM').textContent   = fmt(get(C.irrig_mm), 4)   + ' mm';
-  document.getElementById('pressureVal').textContent = fmt(get(C.pressure), 1) + ' hPa';
+  // Decision card
+  document.getElementById('decisionVal').textContent  = get(C.decision) || '—';
+  document.getElementById('irrigMMVal').textContent   = fmt(get(C.irrig_mm),4) + ' mm';
+  document.getElementById('recordIdVal').textContent  = get(C.record_id) || '—';
 
-  // ── ET bars ──
+  // ET bars
   const et0  = Number(get(C.et0))      || 0;
   const etc  = Number(get(C.etc))      || 0;
   const net  = Number(get(C.net_loss)) || 0;
-  const etMax = Math.max(et0, etc, net, 0.001) * 1.2;
+  const etMax = Math.max(et0, etc, Math.abs(net), 0.001) * 1.2;
 
-  document.getElementById('et0Bar').style.width = Math.min((et0 / etMax) * 100, 100) + '%';
-  document.getElementById('etcBar').style.width = Math.min((etc / etMax) * 100, 100) + '%';
-  document.getElementById('netBar').style.width = Math.min((Math.abs(net) / etMax) * 100, 100) + '%';
+  document.getElementById('et0Bar').style.width = Math.min((et0/etMax)*100,100) + '%';
+  document.getElementById('etcBar').style.width = Math.min((etc/etMax)*100,100) + '%';
+  document.getElementById('netBar').style.width = Math.min((Math.abs(net)/etMax)*100,100) + '%';
+  document.getElementById('et0Val').textContent = fmt(et0,4) + ' mm';
+  document.getElementById('etcVal').textContent = fmt(etc,4) + ' mm';
+  document.getElementById('netVal').textContent = fmt(net,4) + ' mm';
 
-  document.getElementById('et0Val').textContent = fmt(et0, 4) + ' mm';
-  document.getElementById('etcVal').textContent = fmt(etc, 4) + ' mm';
-  document.getElementById('netVal').textContent = fmt(net, 4) + ' mm';
-
-  // ET timestamp
   const tsRaw = get(C.timestamp);
   if (tsRaw) {
-    try {
-      const d = new Date(tsRaw);
-      document.getElementById('etTimestamp').textContent =
-        d.toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit' });
-    } catch(_) {}
+    try { document.getElementById('etTimestamp').textContent =
+      new Date(tsRaw).toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit'}); } catch(_){}
   }
 
-  // ── Water balance ──
+  // Water balance
   const prevSS   = Number(get(C.prev_ss))   || 0;
   const beforeSS = Number(get(C.before_ss)) || 0;
   const afterSS  = Number(get(C.after_ss))  || 0;
+  document.getElementById('prevSS').textContent   = fmt(prevSS,3);
+  document.getElementById('beforeSS').textContent = fmt(beforeSS,3);
+  document.getElementById('afterSS').textContent  = fmt(afterSS,3);
+  document.getElementById('beforeSS').className   = 'balance-val ' + (beforeSS > 0 ? 'glow-red' : 'glow-green');
 
-  document.getElementById('prevSS').textContent   = fmt(prevSS,   3);
-  document.getElementById('beforeSS').textContent = fmt(beforeSS, 3);
-  document.getElementById('afterSS').textContent  = fmt(afterSS,  3);
-
-  // Color the "before" value: positive deficit = red, negative = green
-  const beforeEl = document.getElementById('beforeSS');
-  beforeEl.className = 'balance-val ' + (beforeSS > 0 ? 'glow-red' : 'glow-green');
-
-  // ── History table ──
+  // History
   const tbody = document.getElementById('historyBody');
   tbody.innerHTML = '';
-
-  const history = rows.slice(0, 15);
-  history.forEach(row => {
+  rows.slice(0,15).forEach(row => {
     const c   = row.c;
-    const get = (i) => cellVal(c[i]);
-
-    const tsRaw = get(C.timestamp);
-    let tsStr = '--';
-    if (tsRaw) {
-      try {
-        const d = new Date(tsRaw);
-        tsStr = d.toLocaleString('en-PH', {
-          month: 'short', day: 'numeric',
-          hour: '2-digit', minute: '2-digit'
-        });
-      } catch(_) {}
-    }
-
-    const decision = (get(C.decision) || 'SKIP').trim().toUpperCase();
-    const soilV    = fmt(get(C.soil),     1);
-    const etcV     = fmt(get(C.etc),      4);
-    const netV     = fmt(get(C.net_loss), 4);
-
-    const tr = document.createElement('tr');
+    const g   = (i) => cellVal(c[i]);
+    const dec = (g(C.decision) || 'SKIP').trim().toUpperCase();
+    const net = Number(g(C.net_loss)) || 0;
+    const tr  = document.createElement('tr');
     tr.innerHTML = `
-      <td class="timestamp">${tsStr}</td>
-      <td style="font-family:var(--mono)">${soilV}%</td>
-      <td style="font-family:var(--mono);font-size:10px">${etcV}</td>
-      <td style="font-family:var(--mono);font-size:10px;color:${Number(get(C.net_loss))>0?'var(--red)':'var(--green-bright)'}">${netV}</td>
-      <td><span class="pill ${decision}">${decision}</span></td>
+      <td class="timestamp">${fmtTime(g(C.timestamp))}</td>
+      <td style="font-family:var(--mono)">${fmt(g(C.soil),1)}%</td>
+      <td style="font-family:var(--mono);font-size:10px">${fmt(g(C.etc),4)}</td>
+      <td style="font-family:var(--mono);font-size:10px;color:${net>0?'var(--red)':'var(--green-bright)'}">${fmt(g(C.net_loss),4)}</td>
+      <td><span class="pill ${dec}">${dec}</span></td>
     `;
     tbody.appendChild(tr);
   });
 }
 
-// ── Auto-refresh every 60 seconds ──
+// ══════════════════════════════════════════
+// UPDATE COMMAND PAGE FROM SENSOR ROW
+// ══════════════════════════════════════════
+function updateCommandInfo(r) {
+  const get = (i) => cellVal(r[i]);
+  document.getElementById('cmdLastTrigger').textContent = get(C.trigger) || '—';
+  document.getElementById('cmdLastDur').textContent     = fmt(get(C.irrig_sec),0) + ' sec';
+  document.getElementById('cmdLastVol').textContent     = fmt(get(C.irrig_vol),3) + ' L';
+}
+
+// ══════════════════════════════════════════
+// LOAD CONFIG FROM SHEET
+// ══════════════════════════════════════════
+async function loadConfig() {
+  const errEl = document.getElementById('cfgError');
+  errEl.style.display = 'none';
+  document.getElementById('cfgLastUpdated').textContent = 'Fetching config…';
+
+  try {
+    const resp = await fetch(gvizUrlRaw(CFG_SHEET));
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const raw  = await resp.text();
+    const data = parseGviz(raw);
+    configRows = data.table.rows.filter(r => r.c && cellVal(r.c[0]));
+    renderConfig();
+    document.getElementById('cfgLastUpdated').textContent =
+      'Config loaded · ' + new Date().toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit'});
+
+    // Update about page
+    updateAbout();
+
+    // Update command page mode buttons
+    const modeRow = configRows.find(r => cellVal(r.c[0]) === 'system_mode');
+    if (modeRow) updateModeButtons(String(cellVal(modeRow.c[1]) || 'AUTO').toUpperCase());
+
+    const statusRow = configRows.find(r => cellVal(r.c[0]) === 'manual_status');
+    if (statusRow) {
+      const s = String(cellVal(statusRow.c[1]) || 'OFF').toUpperCase();
+      pumpOn = s === 'ON';
+      updatePumpUI();
+    }
+
+    const durRow = configRows.find(r => cellVal(r.c[0]) === 'manual_duration_sec');
+    if (durRow) {
+      manualDurSec = Number(cellVal(durRow.c[1])) || 30;
+      document.getElementById('durVal').textContent = manualDurSec;
+    }
+
+  } catch(e) {
+    console.error(e);
+    errEl.style.display  = 'block';
+    errEl.textContent    = '⚠ Config load failed: ' + e.message;
+    document.getElementById('cfgLastUpdated').textContent = 'Failed to load config';
+  }
+}
+
+// ══════════════════════════════════════════
+// RENDER CONFIG CARDS
+// ══════════════════════════════════════════
+const CFG_GROUPS = {
+  cfgThresholds:  ['soil_threshold','net_loss_threshold','solid_state_floor'],
+  cfgIrrigation:  ['max_irrigation_sec','flow_rate_lpm','plot_area_m2'],
+  cfgCrop:        ['crop_type','crop_stage','kc_value']
+};
+
+const CFG_TYPE = {
+  system_mode:         'select:AUTO,MANUAL',
+  manual_status:       'select:OFF,ON',
+  crop_stage:          'select:Seedling,Vegetative,Flowering,Fruiting,Harvest',
+  crop_type:           'text',
+};
+
+function renderConfig() {
+  Object.entries(CFG_GROUPS).forEach(([elId, keys]) => {
+    const el = document.getElementById(elId);
+    if (!el) return;
+    el.innerHTML = '';
+
+    keys.forEach(key => {
+      const row = configRows.find(r => cellVal(r.c[0]) === key);
+      if (!row) return;
+      const val  = cellVal(row.c[1]);
+      const desc = cellVal(row.c[2]) || '';
+      const type = CFG_TYPE[key];
+
+      const item = document.createElement('div');
+      item.className = 'config-item';
+
+      let inputHTML = '';
+      if (type && type.startsWith('select:')) {
+        const opts = type.replace('select:','').split(',');
+        inputHTML = `<select class="config-select" data-key="${key}" onchange="markDirty('${key}',this.value)">
+          ${opts.map(o => `<option value="${o}" ${String(val)===o?'selected':''}>${o}</option>`).join('')}
+        </select>`;
+      } else {
+        const inputType = (typeof val === 'number') ? 'number' : 'text';
+        inputHTML = `<input class="config-input" type="${inputType}" data-key="${key}" value="${val ?? ''}"
+          step="${inputType==='number'?'any':''}"
+          oninput="markDirty('${key}',this.value)" />`;
+      }
+
+      item.innerHTML = `
+        <div class="config-top">
+          <div>
+            <div class="config-key">${key.replace(/_/g,' ')}</div>
+            <div class="config-desc">${desc}</div>
+          </div>
+          <div class="config-val-box" id="cfgBadge_${key}">${val ?? '—'}</div>
+        </div>
+        ${inputHTML}
+      `;
+      el.appendChild(item);
+    });
+  });
+}
+
+function markDirty(key, val) {
+  cfgDirty[key] = val;
+  const badge = document.getElementById('cfgBadge_' + key);
+  if (badge) { badge.textContent = val; badge.style.borderColor = 'var(--amber)'; badge.style.color = 'var(--amber)'; }
+}
+
+// ══════════════════════════════════════════
+// SAVE CONFIG → Apps Script
+// ══════════════════════════════════════════
+async function saveConfig() {
+  if (Object.keys(cfgDirty).length === 0) { showToast('No changes to save'); return; }
+  if (APPS_SCRIPT_URL === 'YOUR_APPS_SCRIPT_WEB_APP_URL_HERE') {
+    showToast('⚠ Set APPS_SCRIPT_URL in the code', true); return;
+  }
+
+  showToast('Saving…');
+  // Build array of {key, value} pairs
+  const updates = Object.entries(cfgDirty).map(([k,v]) => ({key:k, value:v}));
+
+  try {
+    const resp = await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ type:'config_update', updates })
+    });
+    const json = await resp.json();
+    if (json.status === 'success') {
+      showToast('✓ Config saved to sheet');
+      cfgDirty = {};
+      // Reset badge colors
+      document.querySelectorAll('.config-val-box').forEach(b => {
+        b.style.borderColor = ''; b.style.color = '';
+      });
+      await loadConfig();
+    } else {
+      throw new Error(json.message || 'Unknown error');
+    }
+  } catch(e) {
+    showToast('⚠ Save failed: ' + e.message, true);
+  }
+}
+
+// ══════════════════════════════════════════
+// COMMAND: MODE TOGGLE
+// ══════════════════════════════════════════
+function updateModeButtons(mode) {
+  document.getElementById('btnAuto').className   = 'mode-btn' + (mode==='AUTO'?'   active-auto':'');
+  document.getElementById('btnManual').className = 'mode-btn' + (mode==='MANUAL'?' active-manual':'');
+  document.getElementById('cmdCurrentMode').textContent = mode;
+}
+
+async function setMode(mode) {
+  updateModeButtons(mode);
+  await writeConfigCell('system_mode', mode);
+  if (mode === 'AUTO') {
+    pumpOn = false;
+    updatePumpUI();
+    await writeConfigCell('manual_status', 'OFF');
+  }
+}
+
+// ══════════════════════════════════════════
+// COMMAND: PUMP TOGGLE
+// ══════════════════════════════════════════
+function updatePumpUI() {
+  const btn   = document.getElementById('bigPumpBtn');
+  const label = document.getElementById('pumpStatusLabel');
+  const modeEl = document.getElementById('cmdManualStatus');
+  if (pumpOn) {
+    btn.className = 'big-pump-btn on';
+    label.className = 'pump-status-label on';
+    label.textContent = 'PUMP ON';
+    if (modeEl) modeEl.textContent = 'ON';
+  } else {
+    btn.className = 'big-pump-btn';
+    label.className = 'pump-status-label';
+    label.textContent = 'PUMP OFF';
+    if (modeEl) modeEl.textContent = 'OFF';
+  }
+}
+
+async function togglePump() {
+  const modeRow = configRows.find(r => cellVal(r.c[0]) === 'system_mode');
+  const mode = modeRow ? String(cellVal(modeRow.c[1])||'AUTO').toUpperCase() : 'AUTO';
+  if (mode !== 'MANUAL') {
+    showToast('⚠ Switch to MANUAL mode first', true); return;
+  }
+  pumpOn = !pumpOn;
+  updatePumpUI();
+  await writeConfigCell('manual_status', pumpOn ? 'ON' : 'OFF');
+}
+
+// ══════════════════════════════════════════
+// COMMAND: DURATION ADJUST
+// ══════════════════════════════════════════
+function adjustDur(delta) {
+  manualDurSec = Math.max(10, Math.min(300, manualDurSec + delta));
+  document.getElementById('durVal').textContent = manualDurSec;
+}
+
+async function applyDuration() {
+  await writeConfigCell('manual_duration_sec', manualDurSec);
+  showToast('✓ Duration set to ' + manualDurSec + 's');
+}
+
+async function emergencySkip() {
+  if (!confirm('Force SKIP next cycle? This sets system_mode to AUTO and manual_status to OFF.')) return;
+  pumpOn = false;
+  updatePumpUI();
+  await writeConfigCell('manual_status', 'OFF');
+  await writeConfigCell('system_mode', 'AUTO');
+  updateModeButtons('AUTO');
+  showToast('⛔ Force skip applied');
+}
+
+// ══════════════════════════════════════════
+// WRITE SINGLE CONFIG CELL → Apps Script
+// ══════════════════════════════════════════
+async function writeConfigCell(key, value) {
+  if (APPS_SCRIPT_URL === 'YOUR_APPS_SCRIPT_WEB_APP_URL_HERE') {
+    showToast('⚠ Paste your Apps Script URL in the code', true);
+    return;
+  }
+  try {
+    const resp = await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ type:'config_update', updates:[{key, value}] })
+    });
+    const json = await resp.json();
+    if (json.status !== 'success') throw new Error(json.message);
+    // Update local configRows too
+    const row = configRows.find(r => cellVal(r.c[0]) === key);
+    if (row && row.c[1]) row.c[1].v = value;
+  } catch(e) {
+    showToast('⚠ Sync failed: ' + e.message, true);
+  }
+}
+
+// ══════════════════════════════════════════
+// ABOUT PAGE DYNAMIC VALUES
+// ══════════════════════════════════════════
+function updateAbout() {
+  const find = (k) => {
+    const r = configRows.find(r => cellVal(r.c[0]) === k);
+    return r ? cellVal(r.c[1]) : '—';
+  };
+  document.getElementById('aboutKc').textContent   = find('kc_value');
+  document.getElementById('aboutFlow').textContent = find('flow_rate_lpm') + ' L/min';
+  document.getElementById('aboutArea').textContent = find('plot_area_m2')  + ' m²';
+}
+
+// ══════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════
 loadData();
-setInterval(loadData, 60000);
+loadConfig();
+setInterval(loadData, 60000);      // refresh sensor data every 60s
+setInterval(loadConfig, 120000);   // refresh config every 2min
 </script>
 </body>
 </html>
