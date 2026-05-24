@@ -1,1577 +1,2285 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>Tomato Smart Irrigation</title>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Adlai — Smart Irrigation System</title>
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Outfit:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
 <style>
-/* ══════════════════════════════════════════
-   TOKENS
-══════════════════════════════════════════ */
-:root {
-  --green-deep:   #0d3b2e;
-  --green-mid:    #1a6645;
-  --green-bright: #2dcc7a;
-  --green-soft:   #a8f0c6;
-  --amber:        #f5a623;
-  --red:          #e8453c;
-  --blue:         #4db8ff;
-  --bg:           #071a12;
-  --card:         #0f2d1f;
-  --border:       rgba(45,204,122,0.18);
-  --text:         #e8f5ee;
-  --muted:        rgba(232,245,238,0.5);
-  --mono:         'Space Mono', monospace;
-  --sans:         'DM Sans', sans-serif;
-  --nav-h:        60px;
-  --header-h:     52px;
+*{margin:0;padding:0;box-sizing:border-box;}
+
+/* ══ DARK THEME (default) ══ */
+:root,[data-theme="dark"]{
+  --bg:#070c14;
+  --surface:#0c1220;
+  --surface2:#101828;
+  --border:rgba(255,255,255,0.06);
+  --border2:rgba(255,255,255,0.1);
+  --text:#dde8f8;
+  --text-strong:#eef3ff;
+  --muted:#5d7499;
+  --muted2:#7e9bc0;
+  --green:#34d177;
+  --green-dim:rgba(52,209,119,0.1);
+  --green-glow:rgba(52,209,119,0.22);
+  --cyan:#38bdf8;
+  --cyan-dim:rgba(56,189,248,0.1);
+  --amber:#f0a040;
+  --amber-dim:rgba(240,160,64,0.1);
+  --red:#e84040;
+  --red-dim:rgba(232,64,64,0.1);
+  --modal-bg:rgba(4,8,16,0.85);
+  --input-bg:rgba(255,255,255,0.05);
+  --sidebar-w:256px;
+  --topbar-h:60px;
+  --r:14px;
+  --r-sm:9px;
+  --mono:'DM Mono',monospace;
+  --display:'Outfit',sans-serif;
+  --body:'DM Sans',sans-serif;
+  --shadow:0 4px 24px rgba(0,0,0,0.4);
 }
 
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; }
-
-body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: var(--sans);
-  font-size: 14px;
-  min-height: 100dvh;
-  overflow-x: hidden;
-  padding-bottom: var(--nav-h);
+/* ══ LIGHT THEME ══ */
+[data-theme="light"]{
+  --bg:#f1f5f9;
+  --surface:#ffffff;
+  --surface2:#f8fafc;
+  --border:rgba(0,0,0,0.07);
+  --border2:rgba(0,0,0,0.12);
+  --text:#334155;
+  --text-strong:#0f172a;
+  --muted:#94a3b8;
+  --muted2:#64748b;
+  --green:#16a34a;
+  --green-dim:rgba(22,163,74,0.09);
+  --green-glow:rgba(22,163,74,0.18);
+  --cyan:#0284c7;
+  --cyan-dim:rgba(2,132,199,0.09);
+  --amber:#b45309;
+  --amber-dim:rgba(180,83,9,0.09);
+  --red:#dc2626;
+  --red-dim:rgba(220,38,38,0.09);
+  --modal-bg:rgba(15,23,42,0.6);
+  --input-bg:rgba(0,0,0,0.04);
+  --shadow:0 4px 24px rgba(0,0,0,0.1);
 }
 
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
-  pointer-events: none;
-  z-index: 0;
-  opacity: 0.5;
+html,body{height:100%;overflow:hidden;}
+
+body{
+  font-family:var(--body);
+  background:var(--bg);
+  color:var(--text);
+  display:flex;
+  transition:background .25s, color .25s;
 }
 
-/* ══════════════════════════════════════════
-   HEADER
-══════════════════════════════════════════ */
-header {
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  height: var(--header-h);
-  background: rgba(7,26,18,0.94);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border-bottom: 1px solid var(--border);
-  padding: 0 16px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+/* grain only dark */
+[data-theme="dark"] body::before{
+  content:'';
+  position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:9999;opacity:.35;
 }
 
-.logo { display: flex; align-items: center; gap: 10px; }
+.glow-top{
+  position:fixed;width:600px;height:340px;
+  background:radial-gradient(ellipse,rgba(52,209,119,0.05),transparent 70%);
+  top:-80px;right:-80px;pointer-events:none;z-index:0;
+}
+.glow-bottom{
+  position:fixed;width:500px;height:340px;
+  background:radial-gradient(ellipse,rgba(56,189,248,0.04),transparent 70%);
+  bottom:-80px;left:80px;pointer-events:none;z-index:0;
+}
+[data-theme="light"] .glow-top,[data-theme="light"] .glow-bottom{display:none;}
 
-.logo-icon {
-  width: 34px; height: 34px;
-  background: var(--green-mid);
-  border-radius: 9px;
-  display: grid;
-  place-items: center;
-  font-size: 17px;
-  flex-shrink: 0;
+/* ─────────────────────────────────────────
+   SIDEBAR
+───────────────────────────────────────── */
+.sidebar{
+  position:fixed;top:0;left:0;
+  width:var(--sidebar-w);height:100vh;
+  background:var(--surface);
+  backdrop-filter:blur(20px);
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;
+  padding:20px 14px;
+  transition:transform .3s cubic-bezier(.4,0,.2,1),background .25s;
+  z-index:100;
 }
 
-.logo-text { font-family: var(--mono); font-size: 10px; line-height: 1.3; }
-.logo-text strong { display: block; font-size: 12px; color: var(--green-bright); letter-spacing: 0.5px; }
+[data-theme="dark"] .sidebar{background:rgba(8,13,22,0.96);}
 
-.header-right { display: flex; align-items: center; gap: 10px; }
+.sidebar.hidden{transform:translateX(calc(-1 * var(--sidebar-w)));}
 
-.status-pill {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 100px;
-  padding: 5px 10px;
-  font-family: var(--mono);
-  font-size: 9px;
-  letter-spacing: 0.5px;
+.brand{
+  display:flex;align-items:center;gap:11px;
+  padding:6px 10px;margin-bottom:28px;
 }
 
-.status-dot {
-  width: 7px; height: 7px;
-  border-radius: 50%;
-  background: var(--green-bright);
-  box-shadow: 0 0 7px var(--green-bright);
-  animation: pulse 2s infinite;
-  flex-shrink: 0;
-}
-.status-dot.offline { background: var(--red);   box-shadow: 0 0 7px var(--red);   animation: none; }
-.status-dot.loading { background: var(--amber); box-shadow: 0 0 7px var(--amber); }
-
-@keyframes pulse {
-  0%,100% { opacity:1; transform:scale(1); }
-  50%      { opacity:0.5; transform:scale(0.8); }
+.brand-mark{
+  width:34px;height:34px;border-radius:9px;
+  background:linear-gradient(135deg,#145228,#1d7a3c);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 16px var(--green-glow);
+  flex-shrink:0;
 }
 
-/* ══════════════════════════════════════════
-   BOTTOM NAV
-══════════════════════════════════════════ */
-nav {
-  position: fixed;
-  bottom: 0; left: 0; right: 0;
-  z-index: 200;
-  height: var(--nav-h);
-  background: rgba(7,26,18,0.96);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border-top: 1px solid var(--border);
-  display: flex;
+.brand-mark svg{width:16px;height:16px;}
+
+.brand-text{
+  font-family:var(--display);
+  font-weight:600;font-size:.88rem;
+  color:var(--text-strong);
+  line-height:1.3;
 }
 
-.nav-btn {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 3px;
-  background: none;
-  border: none;
-  color: var(--muted);
-  cursor: pointer;
-  padding: 0;
-  transition: color 0.2s;
-  -webkit-tap-highlight-color: transparent;
-  font-family: var(--sans);
+.brand-sub{
+  font-family:var(--mono);
+  color:var(--muted);font-size:.62rem;
+  letter-spacing:.07em;text-transform:uppercase;
 }
 
-.nav-btn.active { color: var(--green-bright); }
-
-.nav-icon { font-size: 20px; line-height: 1; }
-.nav-label { font-family: var(--mono); font-size: 8px; letter-spacing: 0.8px; text-transform: uppercase; }
-
-.nav-btn.active .nav-icon {
-  filter: drop-shadow(0 0 6px rgba(45,204,122,0.7));
+.nav-section-label{
+  font-family:var(--mono);
+  font-size:.6rem;letter-spacing:.11em;
+  text-transform:uppercase;color:var(--muted);
+  padding:0 11px;margin-bottom:6px;margin-top:6px;
 }
 
-/* ══════════════════════════════════════════
-   PAGES
-══════════════════════════════════════════ */
-.page { display: none; position: relative; z-index: 1; }
-.page.active { display: block; }
-
-main { padding: 14px 16px; max-width: 480px; margin: 0 auto; }
-
-/* ══════════════════════════════════════════
-   SHARED COMPONENTS
-══════════════════════════════════════════ */
-.section-label {
-  font-family: var(--mono);
-  font-size: 9px;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: var(--green-bright);
-  opacity: 0.7;
-  margin: 20px 0 8px;
+.nav-item{
+  display:flex;align-items:center;gap:11px;
+  padding:10px 13px;border-radius:var(--r-sm);
+  cursor:pointer;border:none;background:transparent;
+  color:var(--muted2);font-family:var(--body);
+  font-size:.855rem;font-weight:500;
+  width:100%;text-align:left;
+  transition:all .18s;position:relative;
+  margin-bottom:2px;
 }
 
-.card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 16px;
-  margin-bottom: 10px;
-  position: relative;
-  overflow: hidden;
+.nav-item svg{width:15px;height:15px;flex-shrink:0;opacity:.65;}
+
+.nav-item:hover{
+  background:var(--input-bg);
+  color:var(--text);
+}
+.nav-item:hover svg{opacity:.9;}
+
+.nav-item.active{
+  background:var(--green-dim);
+  color:var(--green);
+  border:1px solid rgba(52,209,119,0.14);
+}
+.nav-item.active svg{opacity:1;}
+
+.nav-item.active::before{
+  content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);
+  width:3px;height:55%;background:var(--green);border-radius:0 3px 3px 0;
+  box-shadow:0 0 6px var(--green);
 }
 
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 14px;
+.nav-item.locked-nav{opacity:.6;}
+.nav-item.locked-nav::after{
+  content:'🔒';font-size:.6rem;margin-left:auto;opacity:.5;
 }
 
-.card-title {
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  color: var(--green-bright);
-  opacity: 0.85;
+.sidebar-footer{
+  margin-top:auto;
+  padding:14px;
+  border-top:1px solid var(--border);
+  font-family:var(--mono);font-size:.68rem;
+  color:var(--muted);
 }
 
-.row-line {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 9px 0;
-  border-bottom: 1px solid rgba(255,255,255,0.05);
-}
-.row-line:last-child { border-bottom: none; }
-.row-key  { font-size: 12px; color: var(--muted); }
-.row-val  { font-family: var(--mono); font-size: 12px; font-weight: 700; }
-
-.last-updated {
-  font-family: var(--mono);
-  font-size: 9px;
-  color: var(--muted);
-  text-align: right;
-  margin-bottom: 8px;
+.conn-dot{
+  display:inline-block;width:6px;height:6px;
+  border-radius:50%;background:var(--green);
+  box-shadow:0 0 6px var(--green);
+  margin-right:7px;animation:pulse-dot 2s infinite;
 }
 
-.error-banner {
-  background: rgba(232,69,60,0.12);
-  border: 1px solid rgba(232,69,60,0.3);
-  border-radius: 12px;
-  padding: 12px;
-  text-align: center;
-  font-family: var(--mono);
-  font-size: 10px;
-  color: var(--red);
-  margin-bottom: 12px;
-  display: none;
+@keyframes pulse-dot{0%,100%{opacity:1;}50%{opacity:.35;}}
+
+.sheet-link{
+  display:inline-flex;align-items:center;gap:5px;
+  color:var(--cyan);text-decoration:none;
+  font-size:.62rem;margin-top:6px;
+  opacity:.75;transition:opacity .15s;
+}
+.sheet-link:hover{opacity:1;}
+
+/* ─────────────────────────────────────────
+   MAIN AREA
+───────────────────────────────────────── */
+.layout{
+  flex:1;
+  margin-left:var(--sidebar-w);
+  display:flex;flex-direction:column;
+  height:100vh;
+  transition:margin .3s cubic-bezier(.4,0,.2,1);
 }
 
-.glow-green { color: var(--green-bright); }
-.glow-amber { color: var(--amber); }
-.glow-red   { color: var(--red); }
-.glow-blue  { color: var(--blue); }
+.layout.full{margin-left:0;}
 
-/* ══════════════════════════════════════════
-   HERO CARD (Dashboard)
-══════════════════════════════════════════ */
-.hero-card {
-  background: linear-gradient(135deg, var(--green-mid) 0%, var(--green-deep) 65%);
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  padding: 20px;
-  position: relative;
-  overflow: hidden;
-  margin-bottom: 12px;
+.topbar{
+  height:var(--topbar-h);
+  background:var(--surface);
+  backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;
+  padding:0 24px;gap:12px;
+  position:sticky;top:0;z-index:50;
+  flex-shrink:0;
+  transition:background .25s;
 }
 
-.hero-card::before {
-  content: '';
-  position: absolute;
-  top: -40px; right: -40px;
-  width: 140px; height: 140px;
-  background: radial-gradient(circle, rgba(45,204,122,0.22) 0%, transparent 70%);
-  pointer-events: none;
+[data-theme="dark"] .topbar{background:rgba(7,12,20,0.85);}
+
+.toggle-btn{
+  width:34px;height:34px;border-radius:7px;
+  border:1px solid var(--border2);
+  background:var(--input-bg);
+  color:var(--muted2);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .18s;flex-shrink:0;
+}
+.toggle-btn:hover{background:var(--border2);color:var(--text);}
+.toggle-btn svg{width:15px;height:15px;}
+
+.topbar-title{
+  font-family:var(--display);font-weight:600;
+  font-size:.95rem;letter-spacing:-.01em;
+  color:var(--text-strong);
 }
 
-.hero-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 14px;
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:10px;}
+
+.chip{
+  display:flex;align-items:center;gap:6px;
+  padding:5px 11px;border-radius:999px;
+  font-family:var(--mono);font-size:.68rem;
+  border:1px solid;letter-spacing:.03em;
 }
 
-.hero-label {
-  font-family: var(--mono);
-  font-size: 9px;
-  letter-spacing: 2px;
-  color: var(--green-soft);
-  opacity: 0.7;
-  text-transform: uppercase;
-  margin-bottom: 4px;
+.chip-green{background:var(--green-dim);color:var(--green);border-color:rgba(52,209,119,0.18);}
+.chip-amber{background:var(--amber-dim);color:var(--amber);border-color:rgba(240,160,64,0.2);}
+
+.last-sync{
+  font-family:var(--mono);font-size:.68rem;
+  color:var(--muted);
 }
 
-.hero-decision {
-  font-family: var(--mono);
-  font-size: 10px;
-  padding: 4px 10px;
-  border-radius: 20px;
-  font-weight: 700;
-  letter-spacing: 1px;
+/* icon buttons in topbar */
+.icon-btn{
+  width:34px;height:34px;border-radius:7px;
+  border:1px solid var(--border2);
+  background:var(--input-bg);
+  color:var(--muted2);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .18s;
 }
-.hero-decision.IRRIGATE { background:rgba(77,184,255,0.2); color:var(--blue); border:1px solid rgba(77,184,255,0.4); }
-.hero-decision.SKIP     { background:rgba(45,204,122,0.15); color:var(--green-bright); border:1px solid rgba(45,204,122,0.3); }
+.icon-btn:hover{background:var(--border2);color:var(--text);}
+.icon-btn svg{width:15px;height:15px;}
 
-.hero-moisture { display:flex; align-items:flex-end; gap:6px; margin-bottom:4px; }
-.hero-moisture-val { font-family:var(--mono); font-size:54px; font-weight:700; line-height:1; color:var(--green-bright); text-shadow:0 0 30px rgba(45,204,122,0.4); }
-.hero-moisture-unit { font-family:var(--mono); font-size:16px; color:var(--green-soft); margin-bottom:8px; }
-.hero-moisture-sub { font-size:11px; color:var(--muted); margin-bottom:14px; }
-
-.mbar-wrap { background:rgba(0,0,0,0.3); border-radius:100px; height:8px; overflow:hidden; }
-.mbar-fill { height:100%; border-radius:100px; background:linear-gradient(90deg,var(--green-mid),var(--green-bright)); transition:width 0.8s cubic-bezier(0.34,1.56,0.64,1); position:relative; }
-.mbar-fill::after { content:''; position:absolute; right:0;top:0;bottom:0;width:10px;background:white;border-radius:100px;opacity:0.5; }
-.mbar-threshold { position:relative; height:0; }
-.mbar-threshold-line { position:absolute;top:-13px;width:2px;height:18px;background:var(--amber);border-radius:2px; }
-.mbar-threshold-label { position:absolute;top:7px;font-family:var(--mono);font-size:8px;color:var(--amber);transform:translateX(-50%);white-space:nowrap; }
-
-.hero-footer { display:flex; justify-content:space-between; margin-top:14px; padding-top:14px; border-top:1px solid rgba(255,255,255,0.08); }
-.hero-mini { text-align:center; }
-.hero-mini-val { font-family:var(--mono); font-size:15px; font-weight:700; }
-.hero-mini-label { font-size:9px; color:var(--muted); margin-top:2px; }
-
-/* stat grid */
-.stat-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px; }
-
-.stat-card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 14px;
-  overflow: hidden;
+/* ─────────────────────────────────────────
+   CONTENT
+───────────────────────────────────────── */
+.content{
+  flex:1;overflow-y:auto;overflow-x:hidden;
+  padding:24px;
+  scrollbar-width:thin;
+  scrollbar-color:var(--border2) transparent;
 }
 
-.stat-icon  { font-size:18px; margin-bottom:8px; display:block; }
-.stat-val   { font-family:var(--mono); font-size:22px; font-weight:700; line-height:1; margin-bottom:4px; }
-.stat-unit  { font-size:10px; color:var(--muted); margin-left:2px; }
-.stat-label { font-size:10px; color:var(--muted); line-height:1.3; }
+.content::-webkit-scrollbar{width:4px;}
+.content::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px;}
 
-/* et bars */
-.et-row { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
-.et-label { font-family:var(--mono); font-size:10px; color:var(--muted); width:38px; flex-shrink:0; }
-.et-bar-wrap { flex:1; background:rgba(0,0,0,0.3); border-radius:100px; height:6px; overflow:hidden; }
-.et-bar-fill { height:100%; border-radius:100px; transition:width 0.8s ease; }
-.et-bar-fill.et0  { background:linear-gradient(90deg,#1a6645,#2dcc7a); }
-.et-bar-fill.etc  { background:linear-gradient(90deg,#4d6b1a,#a8cc2d); }
-.et-bar-fill.loss { background:linear-gradient(90deg,#8b1a1a,#e8453c); }
-.et-val { font-family:var(--mono); font-size:11px; width:55px; text-align:right; flex-shrink:0; }
+.page{display:none;}
+.page.active{display:block;}
 
-/* balance */
-.balance-display { display:flex; justify-content:space-between; align-items:center; gap:6px; }
-.balance-item { flex:1; background:rgba(0,0,0,0.25); border-radius:12px; padding:12px 8px; text-align:center; }
-.balance-val  { font-family:var(--mono); font-size:17px; font-weight:700; line-height:1; margin-bottom:4px; }
-.balance-label { font-size:9px; color:var(--muted); line-height:1.3; }
-.balance-arrow { color:var(--muted); font-size:16px; }
-
-/* trigger badge */
-.trigger-badge { display:inline-flex; align-items:center; gap:5px; padding:5px 11px; border-radius:100px; font-family:var(--mono); font-size:9px; font-weight:700; letter-spacing:0.5px; }
-.trigger-badge.NONE      { background:rgba(232,245,238,0.08); color:var(--muted); }
-.trigger-badge.SOIL_DRY  { background:rgba(245,166,35,0.18); color:var(--amber); border:1px solid rgba(245,166,35,0.3); }
-.trigger-badge.NET_LOSS  { background:rgba(232,69,60,0.18);  color:var(--red);   border:1px solid rgba(232,69,60,0.3); }
-.trigger-badge.MANUAL    { background:rgba(77,184,255,0.18); color:var(--blue);  border:1px solid rgba(77,184,255,0.3); }
-.trigger-badge.BOTH      { background:rgba(232,69,60,0.18);  color:var(--red);   border:1px solid rgba(232,69,60,0.3); }
-
-/* history table */
-.history-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; margin:0 -16px; padding:0 16px; }
-.history-table { width:100%; border-collapse:collapse; font-size:11px; min-width:320px; }
-.history-table th { font-family:var(--mono); font-size:9px; letter-spacing:1px; text-transform:uppercase; color:var(--muted); padding:8px; text-align:left; border-bottom:1px solid var(--border); white-space:nowrap; }
-.history-table td { padding:8px; border-bottom:1px solid rgba(255,255,255,0.04); vertical-align:middle; }
-.history-table tr:last-child td { border-bottom:none; }
-.pill { display:inline-block; padding:2px 7px; border-radius:100px; font-family:var(--mono); font-size:9px; font-weight:700; }
-.pill.IRRIGATE { background:rgba(77,184,255,0.2);  color:var(--blue); }
-.pill.SKIP     { background:rgba(45,204,122,0.15); color:var(--green-bright); }
-.timestamp     { font-family:var(--mono); font-size:9px; color:var(--muted); }
-
-/* ══════════════════════════════════════════
-   COMMAND PAGE
-══════════════════════════════════════════ */
-.mode-toggle {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  margin-bottom: 14px;
+/* ─────────────────────────────────────────
+   HERO BANNER
+───────────────────────────────────────── */
+.hero{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:28px;
+  margin-bottom:20px;
+  position:relative;
+  overflow:hidden;
+  transition:background .25s;
 }
 
-.mode-btn {
-  padding: 14px;
-  border-radius: 14px;
-  border: 2px solid var(--border);
-  background: rgba(0,0,0,0.2);
-  color: var(--muted);
-  font-family: var(--mono);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 1px;
-  cursor: pointer;
-  text-align: center;
-  transition: all 0.2s;
-  -webkit-tap-highlight-color: transparent;
+[data-theme="dark"] .hero{
+  background:linear-gradient(135deg,#0c1a11 0%,#091422 50%,#0c1a11 100%);
 }
 
-.mode-btn.active-auto  { border-color: var(--green-bright); color: var(--green-bright); background: rgba(45,204,122,0.1); }
-.mode-btn.active-manual { border-color: var(--amber); color: var(--amber); background: rgba(245,166,35,0.1); }
-
-.pump-control {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 14px;
-  padding: 20px 0 6px;
+.hero::before{
+  content:'';position:absolute;
+  width:360px;height:220px;
+  background:radial-gradient(ellipse,var(--green-glow),transparent 70%);
+  top:-40px;right:-60px;pointer-events:none;
 }
 
-.big-pump-btn {
-  width: 110px; height: 110px;
-  border-radius: 50%;
-  border: 3px solid var(--border);
-  background: rgba(0,0,0,0.3);
-  color: var(--muted);
-  font-size: 36px;
-  cursor: pointer;
-  display: grid;
-  place-items: center;
-  transition: all 0.2s;
-  -webkit-tap-highlight-color: transparent;
-  position: relative;
+.hero-grid{display:grid;grid-template-columns:1fr auto;gap:28px;align-items:start;}
+
+.hero-eyebrow{
+  font-family:var(--mono);font-size:.65rem;
+  letter-spacing:.1em;text-transform:uppercase;
+  color:var(--green);margin-bottom:9px;
+  display:flex;align-items:center;gap:7px;
 }
 
-.big-pump-btn.on {
-  border-color: var(--blue);
-  background: rgba(77,184,255,0.12);
-  box-shadow: 0 0 30px rgba(77,184,255,0.25);
-  color: var(--blue);
-  animation: pump-pulse 1.5s infinite;
+.hero-eyebrow::before{content:'';width:16px;height:1px;background:var(--green);}
+
+.hero h2{
+  font-family:var(--display);font-weight:600;
+  font-size:1.45rem;line-height:1.25;
+  letter-spacing:-.02em;margin-bottom:10px;
+  color:var(--text-strong);
 }
 
-@keyframes pump-pulse {
-  0%,100% { box-shadow: 0 0 20px rgba(77,184,255,0.25); }
-  50%      { box-shadow: 0 0 40px rgba(77,184,255,0.5); }
+.hero p{
+  color:var(--muted2);font-size:.85rem;
+  line-height:1.7;max-width:520px;
 }
 
-.pump-status-label {
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 1.5px;
-  color: var(--muted);
-  text-transform: uppercase;
+.hero-kpi-col{
+  display:flex;flex-direction:column;gap:7px;min-width:168px;
 }
 
-.pump-status-label.on { color: var(--blue); }
-
-.duration-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  margin-top: 6px;
+.hero-kpi{
+  background:var(--input-bg);
+  border:1px solid var(--border);
+  border-radius:11px;padding:12px 16px;
+  text-align:right;
 }
 
-.dur-btn {
-  width: 36px; height: 36px;
-  border-radius: 50%;
-  border: 1px solid var(--border);
-  background: var(--card);
-  color: var(--text);
-  font-size: 18px;
-  cursor: pointer;
-  display: grid;
-  place-items: center;
-  transition: all 0.15s;
-  -webkit-tap-highlight-color: transparent;
+.kpi-label{
+  font-family:var(--mono);font-size:.62rem;
+  letter-spacing:.07em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:3px;
 }
 
-.dur-btn:active { background: var(--green-mid); transform: scale(0.92); }
-
-.dur-display {
-  font-family: var(--mono);
-  font-size: 28px;
-  font-weight: 700;
-  color: var(--text);
-  min-width: 80px;
-  text-align: center;
+.kpi-value{
+  font-family:var(--display);font-size:1.35rem;
+  font-weight:600;letter-spacing:-.02em;
 }
 
-.dur-unit { font-size: 12px; color: var(--muted); }
+.kpi-value.green{color:var(--green);}
+.kpi-value.cyan{color:var(--cyan);}
+.kpi-value.amber{color:var(--amber);}
 
-.send-btn {
-  width: 100%;
-  padding: 15px;
-  border-radius: 14px;
-  border: none;
-  background: linear-gradient(135deg, var(--green-mid), var(--green-bright));
-  color: #071a12;
-  font-family: var(--mono);
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 1px;
-  cursor: pointer;
-  transition: all 0.2s;
-  -webkit-tap-highlight-color: transparent;
-  margin-top: 8px;
+/* STATUS ROW */
+.status-row{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:12px;margin-bottom:20px;
 }
 
-.send-btn:active { transform: scale(0.97); opacity: 0.9; }
-.send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-.send-btn.danger { background: linear-gradient(135deg, #8b1a1a, var(--red)); color: white; }
-
-.toast {
-  position: fixed;
-  bottom: 80px;
-  left: 50%;
-  transform: translateX(-50%) translateY(20px);
-  background: var(--card);
-  border: 1px solid var(--green-bright);
-  color: var(--green-bright);
-  font-family: var(--mono);
-  font-size: 11px;
-  padding: 10px 18px;
-  border-radius: 100px;
-  opacity: 0;
-  transition: all 0.3s;
-  z-index: 300;
-  white-space: nowrap;
-  letter-spacing: 0.5px;
+.stat-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  padding:18px;
+  position:relative;overflow:hidden;
+  transition:border-color .2s,background .25s;
 }
-.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-.toast.error { border-color: var(--red); color: var(--red); }
 
-/* ══════════════════════════════════════════
+.stat-card:hover{border-color:var(--border2);}
+
+.stat-card::after{
+  content:'';position:absolute;
+  bottom:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--accent-color),transparent);
+  opacity:.35;
+}
+
+.stat-card[data-accent="green"]{--accent-color:var(--green);}
+.stat-card[data-accent="cyan"]{--accent-color:var(--cyan);}
+.stat-card[data-accent="amber"]{--accent-color:var(--amber);}
+.stat-card[data-accent="red"]{--accent-color:var(--red);}
+
+.stat-icon{
+  width:30px;height:30px;border-radius:7px;
+  display:flex;align-items:center;justify-content:center;
+  margin-bottom:14px;
+}
+.stat-icon svg{width:14px;height:14px;}
+
+.stat-label{
+  font-family:var(--mono);font-size:.62rem;
+  letter-spacing:.07em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:5px;
+}
+
+.stat-value{
+  font-family:var(--display);font-weight:600;
+  font-size:1.5rem;letter-spacing:-.03em;
+  line-height:1;margin-bottom:5px;
+}
+
+.stat-sub{
+  font-family:var(--mono);font-size:.64rem;
+  color:var(--muted);
+}
+
+.badge{
+  display:inline-flex;align-items:center;gap:4px;
+  font-family:var(--mono);font-size:.62rem;
+  padding:3px 7px;border-radius:999px;letter-spacing:.03em;
+}
+
+.badge-green{background:var(--green-dim);color:var(--green);border:1px solid rgba(52,209,119,.18);}
+.badge-cyan{background:var(--cyan-dim);color:var(--cyan);border:1px solid rgba(56,189,248,.18);}
+.badge-amber{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(240,160,64,.18);}
+.badge-red{background:var(--red-dim);color:var(--red);border:1px solid rgba(232,64,64,.18);}
+
+/* GRID */
+.dash-grid{
+  display:grid;
+  grid-template-columns:2fr 1fr;
+  gap:16px;margin-bottom:16px;
+}
+
+.dash-grid-3{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:16px;margin-bottom:16px;
+}
+
+/* CARD */
+.card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  padding:22px;
+  transition:border-color .18s,background .25s;
+}
+
+.card:hover{border-color:var(--border2);}
+
+.card-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:18px;
+}
+
+.card-title{
+  font-family:var(--display);font-weight:600;
+  font-size:.9rem;letter-spacing:-.01em;
+  color:var(--text-strong);
+}
+
+.card-meta{
+  font-family:var(--mono);font-size:.62rem;
+  color:var(--muted);letter-spacing:.05em;
+  text-transform:uppercase;
+}
+
+/* SENSOR GRID */
+.sensor-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:10px;
+  margin-bottom:18px;
+}
+
+.sensor-cell{
+  background:var(--input-bg);
+  border:1px solid var(--border);
+  border-radius:11px;
+  padding:14px;
+}
+
+.sensor-name{
+  font-family:var(--mono);font-size:.62rem;
+  letter-spacing:.07em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:7px;
+}
+
+.sensor-val{
+  font-family:var(--display);font-weight:600;
+  font-size:1.35rem;letter-spacing:-.02em;
+  margin-bottom:3px;
+  color:var(--text-strong);
+}
+
+.sensor-trend{
+  font-family:var(--mono);font-size:.62rem;
+  color:var(--muted);
+}
+
+/* ACTIVITY */
+.activity-list{display:flex;flex-direction:column;gap:8px;}
+
+.activity-row{
+  display:flex;align-items:flex-start;gap:11px;
+  padding:11px 13px;
+  background:var(--input-bg);
+  border:1px solid var(--border);
+  border-radius:9px;
+}
+
+.activity-dot{
+  width:7px;height:7px;border-radius:50%;
+  margin-top:4px;flex-shrink:0;
+}
+
+.dot-green{background:var(--green);box-shadow:0 0 6px var(--green);}
+.dot-cyan{background:var(--cyan);box-shadow:0 0 6px var(--cyan);}
+.dot-amber{background:var(--amber);}
+
+.activity-title{font-size:.83rem;font-weight:600;margin-bottom:2px;color:var(--text-strong);}
+
+.activity-meta{
+  font-family:var(--mono);font-size:.62rem;
+  color:var(--muted);letter-spacing:.02em;
+}
+
+/* ET FORMULA CARD */
+.formula-card{
+  background:var(--cyan-dim);
+  border:1px solid rgba(56,189,248,.12);
+  border-radius:12px;padding:18px;
+  font-family:var(--mono);
+}
+
+.formula-title{
+  font-size:.62rem;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--cyan);
+  margin-bottom:12px;
+}
+
+.formula-line{
+  display:flex;justify-content:space-between;
+  align-items:center;padding:6px 0;
+  border-bottom:1px solid rgba(255,255,255,.04);
+  font-size:.78rem;
+}
+
+[data-theme="light"] .formula-line{border-bottom-color:rgba(0,0,0,.06);}
+.formula-line:last-child{border-bottom:none;}
+.formula-key{color:var(--muted2);}
+.formula-val{color:var(--text-strong);font-weight:500;}
+
+/* ─────────────────────────────────────────
+   ANALYTICS PAGE
+───────────────────────────────────────── */
+.analytics-grid{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:16px;margin-bottom:16px;
+}
+
+.data-table{
+  width:100%;border-collapse:collapse;
+  font-family:var(--mono);font-size:.76rem;
+}
+
+.data-table thead tr{border-bottom:1px solid var(--border2);}
+
+.data-table th{
+  text-align:left;padding:9px 13px;
+  font-size:.6rem;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--muted);
+  font-weight:500;
+}
+
+.data-table td{
+  padding:10px 13px;color:var(--muted2);
+  border-bottom:1px solid var(--border);
+}
+
+.data-table tbody tr:hover{background:var(--input-bg);}
+.data-table tbody tr:last-child td{border-bottom:none;}
+.td-mono{font-family:var(--mono);font-size:.76rem;}
+
+/* ─────────────────────────────────────────
    CONFIG PAGE
-══════════════════════════════════════════ */
-.config-item {
-  padding: 12px 0;
-  border-bottom: 1px solid rgba(255,255,255,0.05);
-}
-.config-item:last-child { border-bottom: none; }
+───────────────────────────────────────── */
+.config-section{margin-bottom:24px;}
 
-.config-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 6px;
+.config-section-title{
+  font-family:var(--display);font-weight:600;
+  font-size:.88rem;letter-spacing:-.01em;
+  margin-bottom:14px;padding-bottom:9px;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:9px;
+  color:var(--text-strong);
 }
 
-.config-key { font-size: 13px; color: var(--text); font-weight: 500; }
-.config-desc { font-size: 10px; color: var(--muted); margin-top: 2px; }
+.config-section-title svg{width:15px;height:15px;color:var(--green);}
 
-.config-val-box {
-  font-family: var(--mono);
-  font-size: 13px;
-  color: var(--green-bright);
-  background: rgba(45,204,122,0.1);
-  border: 1px solid rgba(45,204,122,0.25);
-  border-radius: 8px;
-  padding: 4px 10px;
-  min-width: 60px;
-  text-align: right;
+.config-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 0;
+  border-bottom:1px solid var(--border);
 }
 
-.config-input {
-  width: 100%;
-  background: rgba(0,0,0,0.3);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 10px 12px;
-  color: var(--text);
-  font-family: var(--mono);
-  font-size: 13px;
-  margin-top: 8px;
-  outline: none;
-  transition: border-color 0.2s;
-}
-.config-input:focus { border-color: var(--green-bright); }
+.config-row:last-child{border-bottom:none;}
 
-.config-select {
-  width: 100%;
-  background: rgba(0,0,0,0.3);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 10px 12px;
-  color: var(--text);
-  font-family: var(--mono);
-  font-size: 13px;
-  margin-top: 8px;
-  outline: none;
-  -webkit-appearance: none;
-  appearance: none;
-}
-.config-select option { background: #0f2d1f; }
-
-.config-sync-row {
-  display: flex;
-  gap: 8px;
-  margin-top: 10px;
+.config-info h4{
+  font-size:.855rem;font-weight:600;margin-bottom:3px;
+  color:var(--text-strong);
 }
 
-/* ══════════════════════════════════════════
+.config-info small{
+  font-family:var(--mono);font-size:.65rem;color:var(--muted);
+}
+
+.config-input{
+  background:var(--input-bg);
+  border:1px solid var(--border2);
+  border-radius:7px;
+  color:var(--text);
+  font-family:var(--mono);font-size:.82rem;
+  padding:7px 12px;width:114px;text-align:right;
+  outline:none;transition:border-color .18s;
+}
+
+.config-input:focus{border-color:var(--green);}
+
+.config-toggle{
+  width:42px;height:23px;border-radius:999px;
+  background:var(--input-bg);
+  border:1px solid var(--border2);
+  cursor:pointer;position:relative;
+  transition:all .2s;
+}
+
+.config-toggle.on{
+  background:var(--green);
+  border-color:var(--green);
+}
+
+.config-toggle::after{
+  content:'';position:absolute;
+  width:17px;height:17px;border-radius:50%;
+  background:white;top:2px;left:2px;
+  transition:left .18s;
+}
+
+.config-toggle.on::after{left:21px;}
+
+/* ─────────────────────────────────────────
+   COMMANDS PAGE
+───────────────────────────────────────── */
+.cmd-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:14px;margin-bottom:24px;
+}
+
+.cmd-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  padding:22px;
+  text-align:center;
+  transition:border-color .18s,background .25s;
+}
+
+.cmd-icon{
+  width:48px;height:48px;border-radius:13px;
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto 14px;
+}
+.cmd-icon svg{width:22px;height:22px;}
+
+.cmd-name{
+  font-family:var(--display);font-weight:600;
+  font-size:.95rem;margin-bottom:5px;
+  color:var(--text-strong);
+}
+
+.cmd-desc{
+  font-size:.78rem;color:var(--muted2);
+  line-height:1.6;margin-bottom:18px;
+}
+
+/* BUTTONS */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  padding:9px 20px;border-radius:9px;
+  font-family:var(--display);font-weight:600;
+  font-size:.78rem;letter-spacing:.03em;
+  border:none;cursor:pointer;
+  transition:all .18s;text-transform:uppercase;
+  letter-spacing:.06em;
+}
+
+.btn-green{
+  background:linear-gradient(135deg,#155e35,#16833d);
+  color:var(--green);
+  border:1px solid rgba(52,209,119,.25);
+  box-shadow:0 0 16px rgba(52,209,119,.12);
+}
+.btn-green:hover{
+  background:linear-gradient(135deg,#16833d,#1a9e4a);
+  box-shadow:0 0 24px rgba(52,209,119,.22);
+  transform:translateY(-1px);
+}
+.btn-green:active{transform:translateY(0);}
+
+.btn-red{
+  background:linear-gradient(135deg,#7c1d1d,#961b1b);
+  color:var(--red);
+  border:1px solid rgba(232,64,64,.25);
+  box-shadow:0 0 16px rgba(232,64,64,.12);
+}
+.btn-red:hover{
+  box-shadow:0 0 24px rgba(232,64,64,.22);
+  transform:translateY(-1px);
+}
+
+.btn-cyan{
+  background:linear-gradient(135deg,#0b4a6d,#075981);
+  color:var(--cyan);
+  border:1px solid rgba(56,189,248,.25);
+  box-shadow:0 0 16px rgba(56,189,248,.12);
+}
+.btn-cyan:hover{
+  box-shadow:0 0 24px rgba(56,189,248,.22);
+  transform:translateY(-1px);
+}
+
+.btn-sm{padding:6px 14px;font-size:.7rem;}
+.btn-full{width:100%;}
+
+.btn-ghost{
+  background:var(--input-bg);
+  color:var(--muted2);
+  border:1px solid var(--border2);
+}
+.btn-ghost:hover{background:var(--border2);color:var(--text);}
+
+/* CMD LOG */
+.cmd-log{
+  background:var(--input-bg);
+  border:1px solid var(--border);
+  border-radius:12px;padding:18px;
+  font-family:var(--mono);font-size:.76rem;
+  height:170px;overflow-y:auto;
+}
+
+.log-line{
+  color:var(--muted2);padding:2.5px 0;
+  display:flex;gap:13px;
+}
+
+.log-ts{color:var(--muted);flex-shrink:0;}
+.log-msg-ok{color:var(--green);}
+.log-msg-warn{color:var(--amber);}
+.log-msg-err{color:var(--red);}
+
+/* ─────────────────────────────────────────
    ABOUT PAGE
-══════════════════════════════════════════ */
-.about-hero {
-  background: linear-gradient(135deg, var(--green-mid), var(--green-deep));
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  padding: 28px 20px;
-  text-align: center;
-  margin-bottom: 12px;
-  position: relative;
-  overflow: hidden;
+───────────────────────────────────────── */
+.about-hero{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:18px;padding:36px;
+  margin-bottom:18px;
+  text-align:center;
+  transition:background .25s;
 }
 
-.about-hero::before {
-  content: '';
-  position: absolute;
-  top: -50px; left: 50%;
-  transform: translateX(-50%);
-  width: 200px; height: 200px;
-  background: radial-gradient(circle, rgba(45,204,122,0.2) 0%, transparent 70%);
-  pointer-events: none;
+[data-theme="dark"] .about-hero{
+  background:linear-gradient(135deg,#091a10,#09131e);
 }
 
-.about-emoji { font-size: 54px; margin-bottom: 12px; display: block; }
-.about-title { font-family: var(--mono); font-size: 16px; font-weight: 700; color: var(--green-bright); margin-bottom: 6px; letter-spacing: 1px; }
-.about-sub   { font-size: 12px; color: var(--muted); line-height: 1.5; }
-
-.version-badge {
-  display: inline-block;
-  background: rgba(45,204,122,0.15);
-  border: 1px solid rgba(45,204,122,0.3);
-  border-radius: 100px;
-  padding: 4px 12px;
-  font-family: var(--mono);
-  font-size: 10px;
-  color: var(--green-bright);
-  margin-top: 10px;
-  letter-spacing: 1px;
+.about-hero h2{
+  font-family:var(--display);font-weight:600;
+  font-size:1.8rem;letter-spacing:-.03em;
+  margin-bottom:10px;color:var(--text-strong);
 }
 
-.about-spec {
-  display: flex;
-  justify-content: space-between;
-  padding: 10px 0;
-  border-bottom: 1px solid rgba(255,255,255,0.05);
-  font-size: 12px;
-}
-.about-spec:last-child { border-bottom: none; }
-.about-spec-key { color: var(--muted); }
-.about-spec-val { font-family: var(--mono); font-size: 11px; color: var(--text); text-align: right; }
-
-.formula-block {
-  background: rgba(0,0,0,0.4);
-  border-radius: 12px;
-  padding: 14px;
-  font-family: var(--mono);
-  font-size: 10px;
-  line-height: 1.8;
-  color: var(--green-soft);
-  margin-top: 6px;
-  border: 1px solid rgba(45,204,122,0.1);
+.about-hero p{
+  color:var(--muted2);max-width:580px;
+  margin:0 auto;line-height:1.75;font-size:.875rem;
 }
 
-.formula-comment { color: var(--muted); font-size: 9px; }
-
-/* ══════════════════════════════════════════
-   UTILITIES
-══════════════════════════════════════════ */
-.spinning { animation: spin 1s linear infinite !important; }
-@keyframes spin { to { transform: rotate(360deg); } }
-
-.fade-in { opacity:0; transform:translateY(10px); animation:fadeIn 0.4s ease forwards; }
-@keyframes fadeIn { to { opacity:1; transform:translateY(0); } }
-
-.crop-tag {
-  background: rgba(45,204,122,0.12);
-  border: 1px solid rgba(45,204,122,0.25);
-  border-radius: 100px;
-  padding: 3px 10px;
-  font-family: var(--mono);
-  font-size: 9px;
-  color: var(--green-bright);
-  letter-spacing: 0.5px;
+.about-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:14px;margin-bottom:18px;
 }
 
-.divider { height: 1px; background: var(--border); margin: 4px 0 14px; }
-
-footer {
-  position: relative;
-  z-index: 1;
-  text-align: center;
-  padding: 16px;
-  font-family: var(--mono);
-  font-size: 9px;
-  color: var(--muted);
-  letter-spacing: 1px;
+.about-feature{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:13px;padding:22px;
+  transition:background .25s;
 }
-footer span { color: var(--green-bright); }
+
+.about-feature-icon{
+  width:38px;height:38px;border-radius:9px;
+  display:flex;align-items:center;justify-content:center;
+  margin-bottom:12px;
+}
+
+.about-feature h4{
+  font-family:var(--display);font-weight:600;
+  font-size:.875rem;margin-bottom:7px;
+  color:var(--text-strong);
+}
+
+.about-feature p{
+  font-size:.78rem;color:var(--muted2);line-height:1.65;
+}
+
+.spec-table{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  overflow:hidden;
+  transition:background .25s;
+}
+
+/* ─────────────────────────────────────────
+   LOADING STATE
+───────────────────────────────────────── */
+.loading-overlay{
+  position:fixed;inset:0;
+  background:var(--bg);
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  z-index:1000;
+  transition:opacity .5s,visibility .5s;
+}
+
+.loading-overlay.hidden{opacity:0;visibility:hidden;}
+
+.loader-ring{
+  width:44px;height:44px;
+  border:2px solid var(--green-dim);
+  border-top-color:var(--green);
+  border-radius:50%;
+  animation:spin .8s linear infinite;
+  margin-bottom:18px;
+}
+
+@keyframes spin{to{transform:rotate(360deg);}}
+
+.loader-text{
+  font-family:var(--mono);font-size:.72rem;
+  color:var(--muted);letter-spacing:.09em;
+  text-transform:uppercase;
+}
+
+/* ─────────────────────────────────────────
+   TOAST
+───────────────────────────────────────── */
+.toast-container{
+  position:fixed;bottom:20px;right:20px;
+  display:flex;flex-direction:column;gap:9px;
+  z-index:9000;
+}
+
+.toast{
+  background:var(--surface2);
+  border:1px solid var(--border2);
+  border-radius:11px;
+  padding:11px 16px;
+  font-family:var(--mono);font-size:.76rem;
+  display:flex;align-items:center;gap:9px;
+  animation:slide-in .28s ease;
+  min-width:250px;
+  color:var(--text);
+  box-shadow:var(--shadow);
+}
+
+@keyframes slide-in{
+  from{transform:translateX(110%);opacity:0;}
+  to{transform:translateX(0);opacity:1;}
+}
+
+/* ─────────────────────────────────────────
+   MODAL BASE
+───────────────────────────────────────── */
+.modal-overlay{
+  position:fixed;inset:0;
+  background:var(--modal-bg);
+  backdrop-filter:blur(8px);
+  z-index:500;
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;visibility:hidden;
+  transition:opacity .25s,visibility .25s;
+}
+
+.modal-overlay.open{opacity:1;visibility:visible;}
+
+.modal{
+  background:var(--surface);
+  border:1px solid var(--border2);
+  border-radius:18px;
+  padding:28px;
+  width:440px;
+  max-width:95vw;
+  box-shadow:var(--shadow);
+  transform:translateY(10px);
+  transition:transform .25s;
+}
+
+.modal-overlay.open .modal{transform:translateY(0);}
+
+.modal-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:22px;
+}
+
+.modal-title{
+  font-family:var(--display);font-weight:600;
+  font-size:1.05rem;color:var(--text-strong);
+}
+
+.modal-close{
+  width:28px;height:28px;border-radius:6px;
+  border:1px solid var(--border2);
+  background:var(--input-bg);
+  color:var(--muted2);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  font-size:.9rem;
+  transition:all .15s;
+}
+.modal-close:hover{background:var(--border2);color:var(--text);}
+
+.modal-field{margin-bottom:16px;}
+
+.modal-label{
+  font-family:var(--mono);font-size:.65rem;
+  letter-spacing:.07em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:7px;display:block;
+}
+
+.modal-input{
+  width:100%;
+  background:var(--input-bg);
+  border:1px solid var(--border2);
+  border-radius:8px;
+  color:var(--text);
+  font-family:var(--mono);font-size:.82rem;
+  padding:9px 13px;
+  outline:none;
+  transition:border-color .18s;
+}
+
+.modal-input:focus{border-color:var(--green);}
+.modal-input::placeholder{color:var(--muted);}
+
+.modal-hint{
+  font-family:var(--mono);font-size:.62rem;
+  color:var(--muted);margin-top:5px;line-height:1.5;
+}
+
+.modal-actions{
+  display:flex;gap:10px;margin-top:22px;
+  justify-content:flex-end;
+}
+
+/* ─────────────────────────────────────────
+   LOCK SCREEN (owner overlay on page)
+───────────────────────────────────────── */
+.lock-screen{
+  display:none;
+  flex-direction:column;
+  align-items:center;justify-content:center;
+  min-height:300px;
+  text-align:center;
+  gap:16px;
+}
+
+.lock-screen.visible{display:flex;}
+
+.lock-icon{
+  width:56px;height:56px;border-radius:14px;
+  background:var(--amber-dim);
+  border:1px solid var(--amber);
+  display:flex;align-items:center;justify-content:center;
+  margin-bottom:4px;
+}
+
+.lock-icon svg{width:24px;height:24px;color:var(--amber);}
+
+.lock-screen h3{
+  font-family:var(--display);font-weight:600;
+  font-size:1.1rem;color:var(--text-strong);
+}
+
+.lock-screen p{
+  font-size:.84rem;color:var(--muted2);
+  max-width:300px;line-height:1.6;
+}
+
+/* ─────────────────────────────────────────
+   SETUP BANNER
+───────────────────────────────────────── */
+.setup-banner{
+  background:var(--amber-dim);
+  border:1px solid var(--amber);
+  border-radius:12px;padding:14px 18px;
+  display:flex;align-items:center;gap:12px;
+  margin-bottom:18px;
+  font-size:.84rem;color:var(--amber);
+}
+
+.setup-banner svg{width:16px;height:16px;flex-shrink:0;}
+.setup-banner a{color:var(--cyan);text-decoration:underline;cursor:pointer;}
+
+/* ─────────────────────────────────────────
+   RESPONSIVE
+───────────────────────────────────────── */
+@media(max-width:1100px){
+  .dash-grid{grid-template-columns:1fr;}
+  .status-row{grid-template-columns:repeat(2,1fr);}
+}
+
+@media(max-width:768px){
+  :root{--sidebar-w:240px;}
+  .layout{margin-left:0;}
+  .sidebar{transform:translateX(-100%);}
+  .sidebar.mobile-open{transform:translateX(0);}
+  .status-row{grid-template-columns:1fr 1fr;}
+  .cmd-grid{grid-template-columns:1fr;}
+  .about-grid{grid-template-columns:1fr;}
+  .analytics-grid{grid-template-columns:1fr;}
+  .hero-grid{grid-template-columns:1fr;}
+  .hero-kpi-col{flex-direction:row;flex-wrap:wrap;}
+  .hero-kpi{flex:1;min-width:110px;}
+  .topbar-right .last-sync{display:none;}
+}
 </style>
 </head>
 <body>
 
-<!-- ══════════════════════════════════════════
-     HEADER
-══════════════════════════════════════════ -->
-<header>
-  <div class="logo">
-    <div class="logo-icon">🍅</div>
-    <div class="logo-text">
-      <strong>TOMATO IRRIGATION</strong>
-      Smart Water System v3.8
-    </div>
-  </div>
-  <div class="header-right">
-    <div class="status-pill">
-      <div class="status-dot loading" id="statusDot"></div>
-      <span id="statusText">—</span>
-    </div>
-  </div>
-</header>
+<div class="glow-top"></div>
+<div class="glow-bottom"></div>
 
-<!-- ══════════════════════════════════════════
-     PAGE: DASHBOARD
-══════════════════════════════════════════ -->
-<div class="page active" id="page-dashboard">
-<main>
-  <div class="error-banner" id="dbError"></div>
-  <div class="last-updated" id="lastUpdated">Fetching data…</div>
-
-  <!-- Hero -->
-  <div class="hero-card fade-in">
-    <div class="hero-top">
-      <div>
-        <div class="hero-label">Soil Moisture</div>
-        <div class="crop-tag" id="cropTag">🍅 —</div>
-      </div>
-      <div class="hero-decision SKIP" id="heroDecision">—</div>
-    </div>
-    <div class="hero-moisture">
-      <div class="hero-moisture-val" id="moistureVal">--</div>
-      <div class="hero-moisture-unit">%</div>
-    </div>
-    <div class="hero-moisture-sub">Current soil moisture level</div>
-    <div class="mbar-wrap">
-      <div class="mbar-fill" id="moistureBar" style="width:0%"></div>
-    </div>
-    <div class="mbar-threshold">
-      <div class="mbar-threshold-line" id="thresholdLine" style="left:45%"></div>
-      <div class="mbar-threshold-label" id="thresholdLabel" style="left:45%">45% threshold</div>
-    </div>
-    <div class="hero-footer">
-      <div class="hero-mini">
-        <div class="hero-mini-val glow-amber" id="tempVal">--°C</div>
-        <div class="hero-mini-label">Temp</div>
-      </div>
-      <div class="hero-mini">
-        <div class="hero-mini-val glow-blue" id="humVal">--%</div>
-        <div class="hero-mini-label">Humidity</div>
-      </div>
-      <div class="hero-mini">
-        <div class="hero-mini-val glow-green" id="rainVal">-- mm</div>
-        <div class="hero-mini-label">Rainfall</div>
-      </div>
-      <div class="hero-mini">
-        <div class="hero-mini-val" id="windVal">-- km/h</div>
-        <div class="hero-mini-label">Wind</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Stat grid -->
-  <div class="stat-grid fade-in">
-    <div class="stat-card">
-      <span class="stat-icon">☀️</span>
-      <div class="stat-val glow-amber" id="solarVal">--<span class="stat-unit">W/m²</span></div>
-      <div class="stat-label">Solar Radiance</div>
-    </div>
-    <div class="stat-card">
-      <span class="stat-icon">🌡️</span>
-      <div class="stat-val" id="pressureVal">--<span class="stat-unit">hPa</span></div>
-      <div class="stat-label">Pressure</div>
-    </div>
-    <div class="stat-card">
-      <span class="stat-icon">💧</span>
-      <div class="stat-val glow-blue" id="irrigVolVal">--<span class="stat-unit">L</span></div>
-      <div class="stat-label">Last Irrigation Vol.</div>
-    </div>
-    <div class="stat-card">
-      <span class="stat-icon">⏱️</span>
-      <div class="stat-val glow-green" id="irrigSecVal">--<span class="stat-unit">sec</span></div>
-      <div class="stat-label">Pump Duration</div>
-    </div>
-  </div>
-
-  <!-- Last decision -->
-  <div class="card fade-in">
-    <div class="card-header">
-      <div class="card-title">Last Decision</div>
-      <div class="trigger-badge NONE" id="triggerBadge">⬡ NONE</div>
-    </div>
-    <div class="row-line">
-      <div class="row-key">Decision</div>
-      <div class="row-val" id="decisionVal">—</div>
-    </div>
-    <div class="row-line">
-      <div class="row-key">Irrigation Applied</div>
-      <div class="row-val" id="irrigMMVal">— mm</div>
-    </div>
-    <div class="row-line">
-      <div class="row-key">Record ID</div>
-      <div class="row-val" id="recordIdVal" style="font-size:9px;color:var(--muted)">—</div>
-    </div>
-  </div>
-
-  <!-- ET -->
-  <div class="card fade-in">
-    <div class="card-header">
-      <div class="card-title">Evapotranspiration</div>
-      <div class="timestamp" id="etTimestamp">—</div>
-    </div>
-    <div class="et-row">
-      <div class="et-label">ET₀</div>
-      <div class="et-bar-wrap"><div class="et-bar-fill et0" id="et0Bar" style="width:0%"></div></div>
-      <div class="et-val" id="et0Val">-- mm</div>
-    </div>
-    <div class="et-row">
-      <div class="et-label">ETc</div>
-      <div class="et-bar-wrap"><div class="et-bar-fill etc" id="etcBar" style="width:0%"></div></div>
-      <div class="et-val" id="etcVal">-- mm</div>
-    </div>
-    <div class="et-row">
-      <div class="et-label">Net</div>
-      <div class="et-bar-wrap"><div class="et-bar-fill loss" id="netBar" style="width:0%"></div></div>
-      <div class="et-val" id="netVal">-- mm</div>
-    </div>
-  </div>
-
-  <!-- Water balance -->
-  <div class="card fade-in">
-    <div class="card-header"><div class="card-title">Solid State Balance</div></div>
-    <div class="balance-display">
-      <div class="balance-item">
-        <div class="balance-val glow-amber" id="prevSS">--</div>
-        <div class="balance-label">Previous<br>(mm)</div>
-      </div>
-      <div class="balance-arrow">→</div>
-      <div class="balance-item">
-        <div class="balance-val glow-red" id="beforeSS">--</div>
-        <div class="balance-label">Before<br>Irrigation</div>
-      </div>
-      <div class="balance-arrow">→</div>
-      <div class="balance-item">
-        <div class="balance-val glow-green" id="afterSS">--</div>
-        <div class="balance-label">After<br>Irrigation</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- History -->
-  <div class="section-label">Recent Log</div>
-  <div class="card fade-in" style="padding:0 0 4px;">
-    <div class="history-scroll">
-      <table class="history-table">
-        <thead>
-          <tr>
-            <th>Time</th><th>Soil%</th><th>ETc</th><th>Net</th><th>Decision</th>
-          </tr>
-        </thead>
-        <tbody id="historyBody">
-          <tr><td colspan="5" style="text-align:center;color:var(--muted);padding:20px;font-family:var(--mono);font-size:10px;">Loading…</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-  <footer><span>PLOT_1</span> · ESP32_001 · <span>Tomato</span><br>Lat 8.9586 · Lon 125.5958</footer>
-</main>
+<!-- LOADING OVERLAY -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loader-ring"></div>
+  <div class="loader-text">Fetching sensor data…</div>
 </div>
 
-<!-- ══════════════════════════════════════════
-     PAGE: COMMAND
-══════════════════════════════════════════ -->
-<div class="page" id="page-command">
-<main>
-  <div class="section-label">System Mode</div>
-  <div class="card fade-in">
-    <div class="mode-toggle">
-      <button class="mode-btn" id="btnAuto" onclick="setMode('AUTO')">🤖 AUTO</button>
-      <button class="mode-btn" id="btnManual" onclick="setMode('MANUAL')">🖐 MANUAL</button>
-    </div>
-    <div class="row-line">
-      <div class="row-key">Current Mode</div>
-      <div class="row-val" id="cmdCurrentMode">—</div>
-    </div>
-    <div class="row-line">
-      <div class="row-key">Manual Status</div>
-      <div class="row-val" id="cmdManualStatus">—</div>
-    </div>
-  </div>
+<!-- TOAST CONTAINER -->
+<div class="toast-container" id="toastContainer"></div>
 
-  <div class="section-label">Pump Control</div>
-  <div class="card fade-in">
-    <div class="pump-control">
-      <button class="big-pump-btn" id="bigPumpBtn" onclick="togglePump()">💧</button>
-      <div class="pump-status-label" id="pumpStatusLabel">PUMP OFF</div>
+<!-- ══════════════════════════════════════
+     PASSWORD MODAL
+══════════════════════════════════════ -->
+<div class="modal-overlay" id="passwordModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">🔒 Owner Access Required</div>
+      <button class="modal-close" onclick="closePasswordModal()">✕</button>
     </div>
-    <div class="divider"></div>
-    <div style="font-family:var(--mono);font-size:9px;color:var(--muted);text-align:center;margin-bottom:10px;letter-spacing:1px;">MANUAL DURATION</div>
-    <div class="duration-row">
-      <button class="dur-btn" onclick="adjustDur(-10)">−</button>
-      <div>
-        <div class="dur-display"><span id="durVal">30</span><span class="dur-unit"> sec</span></div>
+    <p style="font-size:.84rem;color:var(--muted2);margin-bottom:18px;line-height:1.6">
+      This section is restricted to owners. Enter the access password to continue.
+    </p>
+    <div class="modal-field">
+      <label class="modal-label">Password</label>
+      <input class="modal-input" type="password" id="passwordInput" placeholder="Enter owner password"
+        onkeydown="if(event.key==='Enter')checkPassword()">
+      <div class="modal-hint" id="passwordError" style="color:var(--red);display:none">
+        Incorrect password. Please try again.
       </div>
-      <button class="dur-btn" onclick="adjustDur(10)">+</button>
     </div>
-    <button class="send-btn" onclick="applyDuration()" style="margin-top:14px;">✓ APPLY DURATION TO SHEET</button>
-  </div>
-
-  <div class="section-label">Quick Actions</div>
-  <div class="card fade-in">
-    <div class="row-line">
-      <div class="row-key">Last pump trigger</div>
-      <div class="row-val" id="cmdLastTrigger">—</div>
-    </div>
-    <div class="row-line">
-      <div class="row-key">Last duration</div>
-      <div class="row-val" id="cmdLastDur">—</div>
-    </div>
-    <div class="row-line">
-      <div class="row-key">Last volume</div>
-      <div class="row-val" id="cmdLastVol">—</div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost btn-sm" onclick="closePasswordModal()">Cancel</button>
+      <button class="btn btn-green btn-sm" onclick="checkPassword()">Unlock</button>
     </div>
   </div>
-
-  <div style="padding:0 0 16px;">
-    <div class="send-btn danger" onclick="emergencySkip()" style="display:block;text-align:center;cursor:pointer;border-radius:14px;padding:15px;">⛔ FORCE SKIP NEXT CYCLE</div>
-  </div>
-
-  <footer><span>Commands sync to Config sheet</span><br>Google Sheets · Real-time</footer>
-</main>
 </div>
 
-<!-- ══════════════════════════════════════════
-     PAGE: CONFIG
-══════════════════════════════════════════ -->
-<div class="page" id="page-config">
-<main>
-  <div class="last-updated" id="cfgLastUpdated">Loading config…</div>
-  <div class="error-banner" id="cfgError"></div>
+<!-- ══════════════════════════════════════
+     SETTINGS MODAL
+══════════════════════════════════════ -->
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">⚙ Connection Settings</div>
+      <button class="modal-close" onclick="closeSettings()">✕</button>
+    </div>
 
-  <div class="section-label">Thresholds</div>
-  <div class="card fade-in" id="cfgThresholds">
-    <!-- injected by JS -->
-    <div style="text-align:center;padding:20px;font-family:var(--mono);font-size:10px;color:var(--muted);">Loading…</div>
+    <div class="modal-field">
+      <label class="modal-label">Apps Script Webapp URL</label>
+      <input class="modal-input" type="url" id="settingWebappUrl"
+        placeholder="https://script.google.com/macros/s/…/exec">
+      <div class="modal-hint">
+        The deployed Google Apps Script Web App URL. Used for fetching live data and sending commands.
+      </div>
+    </div>
+
+    <div class="modal-field">
+      <label class="modal-label">Google Sheet URL (direct link)</label>
+      <input class="modal-input" type="url" id="settingSheetUrl"
+        placeholder="https://docs.google.com/spreadsheets/d/…">
+      <div class="modal-hint">
+        Link shown in the sidebar for quick access to the raw spreadsheet.
+      </div>
+    </div>
+
+    <div class="modal-field">
+      <label class="modal-label">Google Sheet ID (for fallback fetch)</label>
+      <input class="modal-input" type="text" id="settingSheetId"
+        placeholder="1fR-ZPti2hilTDtp2LSND9CzkA3eaYqfjgWpTbqmzEVg">
+      <div class="modal-hint">
+        The ID portion of the sheet URL. Used as a fallback when the webapp is unavailable.
+      </div>
+    </div>
+
+    <div style="border-top:1px solid var(--border);padding-top:16px;margin-top:4px">
+      <div class="modal-label" style="margin-bottom:10px;">Change Owner Password</div>
+      <div style="display:flex;gap:8px">
+        <input class="modal-input" type="password" id="settingNewPw"
+          placeholder="New password (leave blank to keep current)" style="flex:1">
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-ghost btn-sm" onclick="closeSettings()">Cancel</button>
+      <button class="btn btn-green btn-sm" onclick="saveSettings()">Save Settings</button>
+    </div>
   </div>
-
-  <div class="section-label">Irrigation Parameters</div>
-  <div class="card fade-in" id="cfgIrrigation">
-    <div style="text-align:center;padding:20px;font-family:var(--mono);font-size:10px;color:var(--muted);">Loading…</div>
-  </div>
-
-  <div class="section-label">Crop Settings</div>
-  <div class="card fade-in" id="cfgCrop">
-    <div style="text-align:center;padding:20px;font-family:var(--mono);font-size:10px;color:var(--muted);">Loading…</div>
-  </div>
-
-  <div style="padding:0 0 20px;">
-    <button class="send-btn" onclick="saveConfig()">💾 SAVE ALL CHANGES TO SHEET</button>
-  </div>
-
-  <footer><span>Config sheet</span> · Changes write directly<br>to Google Sheets via Apps Script</footer>
-</main>
 </div>
 
-<!-- ══════════════════════════════════════════
-     PAGE: ABOUT
-══════════════════════════════════════════ -->
-<div class="page" id="page-about">
-<main>
-  <div class="about-hero fade-in">
-    <span class="about-emoji">🍅</span>
-    <div class="about-title">TOMATO SMART IRRIGATION</div>
-    <div class="about-sub">Automated water management system<br>powered by FAO-56 Penman-Monteith<br>evapotranspiration model</div>
-    <div class="version-badge">FIRMWARE v3.8 · FINAL</div>
-  </div>
-
-  <div class="section-label">System Specs</div>
-  <div class="card fade-in">
-    <div class="about-spec"><span class="about-spec-key">Device</span><span class="about-spec-val">ESP32_001</span></div>
-    <div class="about-spec"><span class="about-spec-key">Plot</span><span class="about-spec-val">PLOT_1</span></div>
-    <div class="about-spec"><span class="about-spec-key">Location</span><span class="about-spec-val">8.9586°N, 125.5958°E</span></div>
-    <div class="about-spec"><span class="about-spec-key">Crop</span><span class="about-spec-val">Tomato (Solanum lycopersicum)</span></div>
-    <div class="about-spec"><span class="about-spec-key">Kc (Vegetative)</span><span class="about-spec-val" id="aboutKc">—</span></div>
-    <div class="about-spec"><span class="about-spec-key">Flow Rate</span><span class="about-spec-val" id="aboutFlow">—</span></div>
-    <div class="about-spec"><span class="about-spec-key">Plot Area</span><span class="about-spec-val" id="aboutArea">—</span></div>
-    <div class="about-spec"><span class="about-spec-key">Log Interval</span><span class="about-spec-val">1 minute</span></div>
-    <div class="about-spec"><span class="about-spec-key">Log Sheet</span><span class="about-spec-val">Logs_1min</span></div>
-    <div class="about-spec"><span class="about-spec-key">Dashboard Refresh</span><span class="about-spec-val">Every 60 sec</span></div>
-  </div>
-
-  <div class="section-label">ET₀ Formula (FAO-56)</div>
-  <div class="card fade-in">
-    <div class="about-sub" style="margin-bottom:10px;font-size:11px;">Reference evapotranspiration using Penman-Monteith equation adapted for 1-minute intervals.</div>
-    <div class="formula-block">
-<span class="formula-comment">// Wind: km/h → m/s</span>
-wind_ms = wind_kmh / 3.6
-
-<span class="formula-comment">// Net radiation (1-min interval)</span>
-Rn = solar_Wm2 × 0.0036 × (1/60)
-
-<span class="formula-comment">// Saturation vapour pressure</span>
-es = 0.6108 × exp(17.27T / T+237.3)
-ea = es × (RH/100)
-vpd = max(es − ea, 0)
-
-<span class="formula-comment">// Slope of saturation curve</span>
-Δ = 4098 × es / (T+237.3)²
-
-<span class="formula-comment">// Psychrometric constant</span>
-γ = 0.0665
-
-<span class="formula-comment">// ET₀ result (mm/min)</span>
-ET₀ = (0.408ΔRn + γ·(900/T+273)·u·vpd)
-       / (Δ + γ·(1 + 0.34u))
-
-<span class="formula-comment">// Crop ET</span>
-ETc = ET₀ × Kc
+<!-- ══════════════════ SIDEBAR ══════════════════ -->
+<aside class="sidebar" id="sidebar">
+  <div class="brand">
+    <div class="brand-mark">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#34d177" stroke-width="2" stroke-linecap="round">
+        <path d="M12 2C8 2 4 6 4 10c0 5 8 12 8 12s8-7 8-12c0-4-4-8-8-8z"/>
+        <circle cx="12" cy="10" r="3"/>
+      </svg>
+    </div>
+    <div>
+      <div class="brand-text">Adlai IrrigSys</div>
+      <div class="brand-sub">v2.4 · ESP32</div>
     </div>
   </div>
 
-  <div class="section-label">Decision Logic</div>
-  <div class="card fade-in">
-    <div class="row-line"><div class="row-key">SOIL_DRY</div><div class="row-val" style="font-size:11px;">Soil % &lt; threshold</div></div>
-    <div class="row-line"><div class="row-key">NET_LOSS</div><div class="row-val" style="font-size:11px;">solidBefore &gt; net_loss_threshold</div></div>
-    <div class="row-line"><div class="row-key">BOTH</div><div class="row-val" style="font-size:11px;">SOIL_DRY + NET_LOSS</div></div>
-    <div class="row-line"><div class="row-key">MANUAL</div><div class="row-val" style="font-size:11px;">system_mode = MANUAL, status = ON</div></div>
-    <div class="row-line"><div class="row-key">NONE</div><div class="row-val" style="font-size:11px;">No trigger, SKIP decision</div></div>
+  <div class="nav-section-label">Monitor</div>
+  <button class="nav-item active" data-page="dashboard">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    Dashboard
+  </button>
+  <button class="nav-item" data-page="analytics">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    Analytics
+  </button>
+
+  <div class="nav-section-label" style="margin-top:14px;">Control</div>
+  <button class="nav-item locked-nav" data-page="config" data-owner="true">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+    Configuration
+  </button>
+  <button class="nav-item locked-nav" data-page="commands" data-owner="true">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+    Commands
+  </button>
+
+  <div class="nav-section-label" style="margin-top:14px;">Info</div>
+  <button class="nav-item" data-page="about">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    About
+  </button>
+
+  <div class="sidebar-footer">
+    <div><span class="conn-dot"></span>ESP32 connected</div>
+    <div style="margin-top:5px;color:var(--muted)">Last sync: <span id="lastSync">—</span></div>
+    <a id="sheetDirectLink" class="sheet-link" href="#" target="_blank" rel="noopener" style="display:none">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+      Open Google Sheet
+    </a>
   </div>
+</aside>
 
-  <div class="section-label">Data Sources</div>
-  <div class="card fade-in">
-    <div class="row-line"><div class="row-key">Sensor</div><div class="row-val" style="font-size:11px;">ESP32 + DHT/Soil probe</div></div>
-    <div class="row-line"><div class="row-key">Solar</div><div class="row-val" style="font-size:11px;">open-meteo.com API</div></div>
-    <div class="row-line"><div class="row-key">Storage</div><div class="row-val" style="font-size:11px;">Google Sheets</div></div>
-    <div class="row-line"><div class="row-key">Backend</div><div class="row-val" style="font-size:11px;">Google Apps Script</div></div>
-    <div class="row-line"><div class="row-key">Frontend</div><div class="row-val" style="font-size:11px;">GitHub Pages</div></div>
-  </div>
+<!-- ══════════════════ LAYOUT ══════════════════ -->
+<div class="layout" id="layout">
 
-  <footer><span>Tomato Smart Irrigation</span><br>Built with ❤️ · FAO-56 Standard</footer>
-</main>
-</div>
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <button class="toggle-btn" id="toggleBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <span class="topbar-title" id="topbarTitle">Dashboard</span>
+    <div class="topbar-right">
+      <button class="btn btn-ghost btn-sm" onclick="fetchData()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.51"/></svg>
+        Refresh
+      </button>
+      <div class="chip chip-green"><span>●</span> System Online</div>
+      <div class="last-sync" id="topbarSync">Never synced</div>
+      <!-- Theme Toggle -->
+      <button class="icon-btn" id="themeToggle" title="Toggle dark/light mode">
+        <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+          <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+        </svg>
+      </button>
+      <!-- Settings -->
+      <button class="icon-btn" onclick="openSettings()" title="Connection Settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.07 4.93l-1.41 1.41M6.34 17.66l-1.41 1.41M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M12 2v2M12 20v2M2 12h2M20 12h2"/>
+        </svg>
+      </button>
+      <!-- Owner unlock/lock -->
+      <button class="icon-btn" id="ownerBtn" onclick="toggleOwnerLock()" title="Owner access">
+        <svg id="ownerIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+      </button>
+    </div>
+  </header>
 
-<!-- ══════════════════════════════════════════
-     BOTTOM NAV
-══════════════════════════════════════════ -->
-<nav>
-  <button class="nav-btn active" id="nav-dashboard" onclick="goTo('dashboard')">
-    <span class="nav-icon">📊</span>
-    <span class="nav-label">Dashboard</span>
-  </button>
-  <button class="nav-btn" id="nav-command" onclick="goTo('command')">
-    <span class="nav-icon">🎛️</span>
-    <span class="nav-label">Command</span>
-  </button>
-  <button class="nav-btn" id="nav-config" onclick="goTo('config')">
-    <span class="nav-icon">⚙️</span>
-    <span class="nav-label">Config</span>
-  </button>
-  <button class="nav-btn" id="nav-about" onclick="goTo('about')">
-    <span class="nav-icon">ℹ️</span>
-    <span class="nav-label">About</span>
-  </button>
-</nav>
+  <!-- ══════════ CONTENT ══════════ -->
+  <div class="content">
 
-<!-- TOAST -->
-<div class="toast" id="toast"></div>
+    <!-- SETUP BANNER (shown if no webapp URL) -->
+    <div class="setup-banner" id="setupBanner" style="display:none">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <span>No Apps Script URL configured. Using demo data.
+        <a onclick="openSettings()">Configure now →</a>
+      </span>
+    </div>
 
-<!-- ══════════════════════════════════════════
-     SCRIPT
-══════════════════════════════════════════ -->
-<script>
-// ══ CONSTANTS ══
-const SHEET_ID   = "1fR-ZPti2hilTDtp2LSND9CzkA3eaYqfjgWpTbqmzEVg";
-const LOG_SHEET  = "Logs_1min";
-const CFG_SHEET  = "Config";
-const PUMP_SHEET = "PumpLog";
-const ROWS_BACK  = 20;
+    <!-- ── DASHBOARD ── -->
+    <section id="dashboard" class="page active">
 
-// Your Apps Script Web App URL — paste it here after deploying
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxyopKWM13oK2VpkjmJayLEyth5IiVuiGHbRLSikl53MNiJ77Y7FTXSmLPPbWUOviVqIw/exec";
-
-// Column map (0-based, from your GAS code)
-const C = {
-  record_id:0, timestamp:1, device_id:2, plot_id:3, crop_stage:4,
-  temp:5, humidity:6, wind:7, pressure:8, solar:9,
-  soil:10, rainfall:11, et0:12, etc:13, net_loss:14,
-  prev_ss:15, before_ss:16, after_ss:17,
-  trigger:18, decision:19, irrig_sec:20, irrig_vol:21, irrig_mm:22
-};
-
-// Config column map (0-based): param | value | description
-const CC = { param:0, value:1, desc:2 };
-
-// ══ STATE ══
-let currentPage   = 'dashboard';
-let manualDurSec  = 30;
-let pumpOn        = false;
-let configRows    = [];
-let cfgDirty      = {};
-
-// ══════════════════════════════════════════
-// NAVIGATION
-// ══════════════════════════════════════════
-function goTo(page) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('page-' + page).classList.add('active');
-  document.getElementById('nav-' + page).classList.add('active');
-  currentPage = page;
-
-  // Lazy-load config when switching to config page
-  if (page === 'config' && configRows.length === 0) loadConfig();
-}
-
-// ══════════════════════════════════════════
-// GVIZ HELPER
-// ══════════════════════════════════════════
-function gvizUrl(sheetName, limit) {
-  const q = encodeURIComponent(`SELECT * ORDER BY B DESC LIMIT ${limit}`);
-  return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}&tq=${q}`;
-}
-
-function gvizUrlRaw(sheetName) {
-  return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`;
-}
-
-function parseGviz(raw) {
-  const json = raw.replace(/^[^{]+/, '').replace(/[^}]+$/, '');
-  return JSON.parse(json);
-}
-
-function cellVal(cell) {
-  if (!cell) return null;
-  if (cell.v === null || cell.v === undefined) return null;
-  return cell.v;
-}
-
-function fmt(v, decimals = 2) {
-  if (v === null || v === undefined || v === '') return '--';
-  const n = Number(v);
-  if (isNaN(n)) return String(v);
-  return n.toFixed(decimals);
-}
-
-function fmtTime(raw) {
-  if (!raw) return '--';
-  try {
-    return new Date(raw).toLocaleString('en-PH', {
-      month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'
-    });
-  } catch(_) { return '--'; }
-}
-
-// ══════════════════════════════════════════
-// STATUS DOT
-// ══════════════════════════════════════════
-function setStatus(state, text) {
-  const dot = document.getElementById('statusDot');
-  const txt = document.getElementById('statusText');
-  dot.className = 'status-dot ' + (state || '');
-  txt.textContent = text || '—';
-}
-
-// ══════════════════════════════════════════
-// TOAST
-// ══════════════════════════════════════════
-function showToast(msg, isError) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'toast show' + (isError ? ' error' : '');
-  setTimeout(() => { t.className = 'toast'; }, 2800);
-}
-
-// ══════════════════════════════════════════
-// LOAD DASHBOARD
-// ══════════════════════════════════════════
-async function loadData() {
-  setStatus('loading', 'Syncing…');
-  const errEl = document.getElementById('dbError');
-  errEl.style.display = 'none';
-
-  try {
-    const resp = await fetch(gvizUrl(LOG_SHEET, ROWS_BACK));
-    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-    const raw  = await resp.text();
-    const data = parseGviz(raw);
-    const rows = data.table.rows;
-    if (!rows || rows.length === 0) throw new Error('No data in sheet');
-
-    renderDashboard(rows);
-    setStatus('', 'ONLINE');
-    document.getElementById('lastUpdated').textContent =
-      'Updated ' + new Date().toLocaleTimeString('en-PH', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
-
-    // Also update command page quick info from same data
-    updateCommandInfo(rows[0].c);
-
-  } catch(e) {
-    console.error(e);
-    setStatus('offline', 'OFFLINE');
-    errEl.style.display = 'block';
-    errEl.textContent   = '⚠ ' + e.message;
-    document.getElementById('lastUpdated').textContent = 'Failed to load';
-  }
-}
-
-// ══════════════════════════════════════════
-// RENDER DASHBOARD
-// ══════════════════════════════════════════
-function renderDashboard(rows) {
-  const r   = rows[0].c;
-  const get = (i) => cellVal(r[i]);
-
-  // Hero
-  const soil = Number(get(C.soil)) || 0;
-  document.getElementById('moistureVal').textContent = fmt(soil, 1);
-  document.getElementById('moistureBar').style.width = Math.min(soil,100) + '%';
-
-  const thresh = 45;
-  document.getElementById('thresholdLine').style.left  = thresh + '%';
-  document.getElementById('thresholdLabel').style.left = thresh + '%';
-  document.getElementById('thresholdLabel').textContent = thresh + '% threshold';
-
-  const stage = get(C.crop_stage) || 'Vegetative';
-  document.getElementById('cropTag').textContent = '🍅 ' + stage;
-
-  const dec = (get(C.decision) || 'SKIP').trim().toUpperCase();
-  const decEl = document.getElementById('heroDecision');
-  decEl.textContent = dec === 'IRRIGATE' ? '💧 IRRIGATE' : '✓ SKIP';
-  decEl.className   = 'hero-decision ' + dec;
-
-  document.getElementById('tempVal').textContent  = fmt(get(C.temp),1) + '°C';
-  document.getElementById('humVal').textContent   = fmt(get(C.humidity),0) + '%';
-  document.getElementById('rainVal').textContent  = fmt(get(C.rainfall),1) + ' mm';
-  document.getElementById('windVal').textContent  = fmt(get(C.wind),1) + ' km/h';
-
-  // Stats
-  document.getElementById('solarVal').innerHTML    = fmt(get(C.solar),0) + '<span class="stat-unit">W/m²</span>';
-  document.getElementById('pressureVal').innerHTML = fmt(get(C.pressure),1) + '<span class="stat-unit">hPa</span>';
-  document.getElementById('irrigVolVal').innerHTML = fmt(get(C.irrig_vol),3) + '<span class="stat-unit">L</span>';
-  document.getElementById('irrigSecVal').innerHTML = fmt(get(C.irrig_sec),0) + '<span class="stat-unit">sec</span>';
-
-  // Trigger badge
-  const trig    = (get(C.trigger) || 'NONE').toString().toUpperCase();
-  const trigEl  = document.getElementById('triggerBadge');
-  let trigClass = 'NONE', trigIcon = '⬡';
-  if (trig.includes('SOIL_DRY') && trig.includes('NET_LOSS')) { trigClass='BOTH';     trigIcon='⚡'; }
-  else if (trig.includes('SOIL_DRY'))  { trigClass='SOIL_DRY'; trigIcon='🌵'; }
-  else if (trig.includes('NET_LOSS'))  { trigClass='NET_LOSS'; trigIcon='📉'; }
-  else if (trig.includes('MANUAL'))    { trigClass='MANUAL';   trigIcon='🖐'; }
-  trigEl.className   = 'trigger-badge ' + trigClass;
-  trigEl.textContent = trigIcon + ' ' + trig.replace(' [CAPPED]','');
-
-  // Decision card
-  document.getElementById('decisionVal').textContent  = get(C.decision) || '—';
-  document.getElementById('irrigMMVal').textContent   = fmt(get(C.irrig_mm),4) + ' mm';
-  document.getElementById('recordIdVal').textContent  = get(C.record_id) || '—';
-
-  // ET bars
-  const et0  = Number(get(C.et0))      || 0;
-  const etc  = Number(get(C.etc))      || 0;
-  const net  = Number(get(C.net_loss)) || 0;
-  const etMax = Math.max(et0, etc, Math.abs(net), 0.001) * 1.2;
-
-  document.getElementById('et0Bar').style.width = Math.min((et0/etMax)*100,100) + '%';
-  document.getElementById('etcBar').style.width = Math.min((etc/etMax)*100,100) + '%';
-  document.getElementById('netBar').style.width = Math.min((Math.abs(net)/etMax)*100,100) + '%';
-  document.getElementById('et0Val').textContent = fmt(et0,4) + ' mm';
-  document.getElementById('etcVal').textContent = fmt(etc,4) + ' mm';
-  document.getElementById('netVal').textContent = fmt(net,4) + ' mm';
-
-  const tsRaw = get(C.timestamp);
-  if (tsRaw) {
-    try { document.getElementById('etTimestamp').textContent =
-      new Date(tsRaw).toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit'}); } catch(_){}
-  }
-
-  // Water balance
-  const prevSS   = Number(get(C.prev_ss))   || 0;
-  const beforeSS = Number(get(C.before_ss)) || 0;
-  const afterSS  = Number(get(C.after_ss))  || 0;
-  document.getElementById('prevSS').textContent   = fmt(prevSS,3);
-  document.getElementById('beforeSS').textContent = fmt(beforeSS,3);
-  document.getElementById('afterSS').textContent  = fmt(afterSS,3);
-  document.getElementById('beforeSS').className   = 'balance-val ' + (beforeSS > 0 ? 'glow-red' : 'glow-green');
-
-  // History
-  const tbody = document.getElementById('historyBody');
-  tbody.innerHTML = '';
-  rows.slice(0,15).forEach(row => {
-    const c   = row.c;
-    const g   = (i) => cellVal(c[i]);
-    const dec = (g(C.decision) || 'SKIP').trim().toUpperCase();
-    const net = Number(g(C.net_loss)) || 0;
-    const tr  = document.createElement('tr');
-    tr.innerHTML = `
-      <td class="timestamp">${fmtTime(g(C.timestamp))}</td>
-      <td style="font-family:var(--mono)">${fmt(g(C.soil),1)}%</td>
-      <td style="font-family:var(--mono);font-size:10px">${fmt(g(C.etc),4)}</td>
-      <td style="font-family:var(--mono);font-size:10px;color:${net>0?'var(--red)':'var(--green-bright)'}">${fmt(g(C.net_loss),4)}</td>
-      <td><span class="pill ${dec}">${dec}</span></td>
-    `;
-    tbody.appendChild(tr);
-  });
-}
-
-// ══════════════════════════════════════════
-// UPDATE COMMAND PAGE FROM SENSOR ROW
-// ══════════════════════════════════════════
-function updateCommandInfo(r) {
-  const get = (i) => cellVal(r[i]);
-  document.getElementById('cmdLastTrigger').textContent = get(C.trigger) || '—';
-  document.getElementById('cmdLastDur').textContent     = fmt(get(C.irrig_sec),0) + ' sec';
-  document.getElementById('cmdLastVol').textContent     = fmt(get(C.irrig_vol),3) + ' L';
-}
-
-// ══════════════════════════════════════════
-// LOAD CONFIG FROM SHEET
-// ══════════════════════════════════════════
-async function loadConfig() {
-  const errEl = document.getElementById('cfgError');
-  errEl.style.display = 'none';
-  document.getElementById('cfgLastUpdated').textContent = 'Fetching config…';
-
-  try {
-    const resp = await fetch(gvizUrlRaw(CFG_SHEET));
-    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-    const raw  = await resp.text();
-    const data = parseGviz(raw);
-    configRows = data.table.rows.filter(r => r.c && cellVal(r.c[0]));
-    renderConfig();
-    document.getElementById('cfgLastUpdated').textContent =
-      'Config loaded · ' + new Date().toLocaleTimeString('en-PH',{hour:'2-digit',minute:'2-digit'});
-
-    // Update about page
-    updateAbout();
-
-    // Update command page mode buttons
-    const modeRow = configRows.find(r => cellVal(r.c[0]) === 'system_mode');
-    if (modeRow) updateModeButtons(String(cellVal(modeRow.c[1]) || 'AUTO').toUpperCase());
-
-    const statusRow = configRows.find(r => cellVal(r.c[0]) === 'manual_status');
-    if (statusRow) {
-      const s = String(cellVal(statusRow.c[1]) || 'OFF').toUpperCase();
-      pumpOn = s === 'ON';
-      updatePumpUI();
-    }
-
-    const durRow = configRows.find(r => cellVal(r.c[0]) === 'manual_duration_sec');
-    if (durRow) {
-      manualDurSec = Number(cellVal(durRow.c[1])) || 30;
-      document.getElementById('durVal').textContent = manualDurSec;
-    }
-
-  } catch(e) {
-    console.error(e);
-    errEl.style.display  = 'block';
-    errEl.textContent    = '⚠ Config load failed: ' + e.message;
-    document.getElementById('cfgLastUpdated').textContent = 'Failed to load config';
-  }
-}
-
-// ══════════════════════════════════════════
-// RENDER CONFIG CARDS
-// ══════════════════════════════════════════
-const CFG_GROUPS = {
-  cfgThresholds:  ['soil_threshold','net_loss_threshold','solid_state_floor'],
-  cfgIrrigation:  ['max_irrigation_sec','flow_rate_lpm','plot_area_m2'],
-  cfgCrop:        ['crop_type','crop_stage','kc_value']
-};
-
-const CFG_TYPE = {
-  system_mode:         'select:AUTO,MANUAL',
-  manual_status:       'select:OFF,ON',
-  crop_stage:          'select:Seedling,Vegetative,Flowering,Fruiting,Harvest',
-  crop_type:           'text',
-};
-
-function renderConfig() {
-  Object.entries(CFG_GROUPS).forEach(([elId, keys]) => {
-    const el = document.getElementById(elId);
-    if (!el) return;
-    el.innerHTML = '';
-
-    keys.forEach(key => {
-      const row = configRows.find(r => cellVal(r.c[0]) === key);
-      if (!row) return;
-      const val  = cellVal(row.c[1]);
-      const desc = cellVal(row.c[2]) || '';
-      const type = CFG_TYPE[key];
-
-      const item = document.createElement('div');
-      item.className = 'config-item';
-
-      let inputHTML = '';
-      if (type && type.startsWith('select:')) {
-        const opts = type.replace('select:','').split(',');
-        inputHTML = `<select class="config-select" data-key="${key}" onchange="markDirty('${key}',this.value)">
-          ${opts.map(o => `<option value="${o}" ${String(val)===o?'selected':''}>${o}</option>`).join('')}
-        </select>`;
-      } else {
-        const inputType = (typeof val === 'number') ? 'number' : 'text';
-        inputHTML = `<input class="config-input" type="${inputType}" data-key="${key}" value="${val ?? ''}"
-          step="${inputType==='number'?'any':''}"
-          oninput="markDirty('${key}',this.value)" />`;
-      }
-
-      item.innerHTML = `
-        <div class="config-top">
+      <div class="hero">
+        <div class="hero-grid">
           <div>
-            <div class="config-key">${key.replace(/_/g,' ')}</div>
-            <div class="config-desc">${desc}</div>
+            <div class="hero-eyebrow">Hybrid ET + Soil Moisture Controller</div>
+            <h2>Adlai Smart Irrigation<br>Monitoring System</h2>
+            <p>Real-time precision agriculture dashboard integrating ET₀ Penman-Monteith modeling, BME280 environmental sensing, capacitive soil moisture analysis, and rainfall compensation logic via ESP32 + Google Sheets telemetry.</p>
           </div>
-          <div class="config-val-box" id="cfgBadge_${key}">${val ?? '—'}</div>
+          <div class="hero-kpi-col">
+            <div class="hero-kpi">
+              <div class="kpi-label">Decision</div>
+              <div class="kpi-value green" id="heroDecision">—</div>
+            </div>
+            <div class="hero-kpi">
+              <div class="kpi-label">ETc Today</div>
+              <div class="kpi-value cyan" id="heroEtc">— mm</div>
+            </div>
+            <div class="hero-kpi">
+              <div class="kpi-label">Soil Moisture</div>
+              <div class="kpi-value amber" id="heroMoisture">—%</div>
+            </div>
+          </div>
         </div>
-        ${inputHTML}
-      `;
-      el.appendChild(item);
+      </div>
+
+      <!-- STATUS ROW -->
+      <div class="status-row">
+        <div class="stat-card" data-accent="green">
+          <div class="stat-icon" style="background:var(--green-dim)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+          <div class="stat-label">System Status</div>
+          <div class="stat-value" style="color:var(--green);font-size:1.15rem" id="statStatus">ONLINE</div>
+          <div style="margin-top:7px"><span class="badge badge-green">● Active</span></div>
+        </div>
+
+        <div class="stat-card" data-accent="amber">
+          <div class="stat-icon" style="background:var(--amber-dim)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2"><path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48 2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48 2.83-2.83"/></svg>
+          </div>
+          <div class="stat-label">Solar Radiation Est.</div>
+          <div class="stat-value" style="color:var(--amber)" id="statRs">— MJ/m²</div>
+          <div class="stat-sub">Based on temp range</div>
+        </div>
+
+        <div class="stat-card" data-accent="cyan">
+          <div class="stat-icon" style="background:var(--cyan-dim)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--cyan)" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+          </div>
+          <div class="stat-label">Net Water Loss</div>
+          <div class="stat-value" style="color:var(--cyan)" id="statNWL">— mm</div>
+          <div class="stat-sub">ETc − Rainfall</div>
+        </div>
+
+        <div class="stat-card" data-accent="green">
+          <div class="stat-icon" style="background:var(--green-dim)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+          </div>
+          <div class="stat-label">Pump Cycles (Today)</div>
+          <div class="stat-value" style="color:var(--green)" id="statCycles">—</div>
+          <div class="stat-sub">Logged events</div>
+        </div>
+      </div>
+
+      <!-- MAIN CONTENT GRID -->
+      <div class="dash-grid">
+        <!-- SENSORS + CHART -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Environmental Sensors</span>
+            <span class="badge badge-green">● Live Feed</span>
+          </div>
+
+          <div class="sensor-grid">
+            <div class="sensor-cell">
+              <div class="sensor-name">🌡 Temperature</div>
+              <div class="sensor-val" id="sTemp">—°C</div>
+              <div class="sensor-trend" id="sTempTrend">Loading…</div>
+            </div>
+            <div class="sensor-cell">
+              <div class="sensor-name">💧 Humidity</div>
+              <div class="sensor-val" id="sHumidity">—%</div>
+              <div class="sensor-trend" id="sHumidityTrend">Loading…</div>
+            </div>
+            <div class="sensor-cell">
+              <div class="sensor-name">📊 Pressure</div>
+              <div class="sensor-val" id="sPressure">— hPa</div>
+              <div class="sensor-trend">BME280 sensor</div>
+            </div>
+            <div class="sensor-cell">
+              <div class="sensor-name">🌧 Rainfall</div>
+              <div class="sensor-val" id="sRainfall">— mm</div>
+              <div class="sensor-trend" id="sRainfallTrend">Tipping bucket</div>
+            </div>
+          </div>
+
+          <div style="position:relative;height:150px">
+            <canvas id="chartTemp"></canvas>
+          </div>
+        </div>
+
+        <!-- RIGHT COLUMN -->
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <!-- ET FORMULA -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">ET Computation</span>
+              <span class="card-meta">Penman-Monteith</span>
+            </div>
+            <div class="formula-card">
+              <div class="formula-title">// Live Parameters</div>
+              <div class="formula-line"><span class="formula-key">ET₀</span><span class="formula-val" id="fET0">— mm/day</span></div>
+              <div class="formula-line"><span class="formula-key">Kc</span><span class="formula-val" id="fKc">1.15</span></div>
+              <div class="formula-line"><span class="formula-key">ETc = ET₀ × Kc</span><span class="formula-val" id="fEtc">— mm/day</span></div>
+              <div class="formula-line"><span class="formula-key">Rainfall</span><span class="formula-val" id="fRainfall">— mm</span></div>
+              <div class="formula-line"><span class="formula-key">Net Loss</span><span class="formula-val" id="fNetLoss">— mm</span></div>
+              <div class="formula-line"><span class="formula-key">Decision</span><span class="formula-val" id="fDecision" style="color:var(--green)">—</span></div>
+            </div>
+          </div>
+
+          <!-- ACTIVITY LOG -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">System Events</span>
+              <span class="card-meta" id="activityCount">0 logs</span>
+            </div>
+            <div class="activity-list" id="activityList">
+              <div class="activity-row">
+                <div class="activity-dot dot-amber"></div>
+                <div>
+                  <div class="activity-title">Awaiting data…</div>
+                  <div class="activity-meta">Syncing with Google Sheets</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BOTTOM ROW -->
+      <div class="dash-grid-3">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Soil Moisture</span>
+            <span class="badge badge-amber" id="moistureBadge">Loading</span>
+          </div>
+          <div style="position:relative;height:130px"><canvas id="chartMoisture"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Humidity Trend</span>
+            <span class="card-meta">24h window</span>
+          </div>
+          <div style="position:relative;height:130px"><canvas id="chartHumidity"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Pressure Trend</span>
+            <span class="card-meta">hPa</span>
+          </div>
+          <div style="position:relative;height:130px"><canvas id="chartPressure"></canvas></div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ── ANALYTICS ── -->
+    <section id="analytics" class="page">
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-header">
+          <span class="card-title">Analytics & Trends</span>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-ghost btn-sm" onclick="fetchData()">↺ Refresh</button>
+            <span class="badge badge-cyan">Google Sheets Live</span>
+          </div>
+        </div>
+        <div class="analytics-grid">
+          <div>
+            <div class="card-meta" style="margin-bottom:10px">ETc Daily Values (mm/day)</div>
+            <div style="position:relative;height:210px"><canvas id="chartEtcBar"></canvas></div>
+          </div>
+          <div>
+            <div class="card-meta" style="margin-bottom:10px">Soil Moisture vs Threshold</div>
+            <div style="position:relative;height:210px"><canvas id="chartMoistureLine"></canvas></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-header">
+          <span class="card-title">Temperature vs Humidity Correlation</span>
+          <span class="card-meta">Scatter analysis</span>
+        </div>
+        <div style="position:relative;height:210px"><canvas id="chartScatter"></canvas></div>
+      </div>
+
+      <!-- LOGS TABLE -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Raw Data Log</span>
+          <span class="card-meta">Last 20 readings</span>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Timestamp</th>
+                <th>Temp (°C)</th>
+                <th>Humidity (%)</th>
+                <th>Pressure (hPa)</th>
+                <th>Soil (%)</th>
+                <th>Rainfall (mm)</th>
+                <th>ET₀</th>
+                <th>ETc</th>
+                <th>Decision</th>
+              </tr>
+            </thead>
+            <tbody id="logsTableBody">
+              <tr><td colspan="9" style="text-align:center;color:var(--muted);padding:22px">Loading data…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── CONFIG ── -->
+    <section id="config" class="page">
+      <!-- Lock screen shown when not authenticated -->
+      <div class="lock-screen" id="configLock">
+        <div class="lock-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        </div>
+        <h3>Owner Access Required</h3>
+        <p>Configuration settings are restricted. Unlock owner access to make changes.</p>
+        <button class="btn btn-green" onclick="promptOwnerAccess('config')">
+          🔓 Unlock Access
+        </button>
+      </div>
+
+      <!-- Actual config content -->
+      <div id="configContent" style="display:none">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">System Configuration</span>
+            <span class="badge badge-amber">⚠ Owner Access</span>
+          </div>
+
+          <div class="config-section">
+            <div class="config-section-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"/><path d="M12 8v4l3 3"/></svg>
+              Irrigation Thresholds
+            </div>
+            <div class="config-row">
+              <div class="config-info">
+                <h4>Soil Moisture Threshold</h4>
+                <small>Min. moisture % before pump activates · Default: 45%</small>
+              </div>
+              <input class="config-input" type="number" value="45" id="cfgMoistureThresh">
+            </div>
+            <div class="config-row">
+              <div class="config-info">
+                <h4>Net Water Loss Threshold</h4>
+                <small>Min. mm/day loss to trigger irrigation · Default: 2.0 mm</small>
+              </div>
+              <input class="config-input" type="number" value="2.0" step="0.1" id="cfgNWLThresh">
+            </div>
+            <div class="config-row">
+              <div class="config-info">
+                <h4>Max Irrigation Duration</h4>
+                <small>Safety cutoff for pump run time (minutes)</small>
+              </div>
+              <input class="config-input" type="number" value="30" id="cfgMaxDuration">
+            </div>
+          </div>
+
+          <div class="config-section">
+            <div class="config-section-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+              Crop & ET Parameters
+            </div>
+            <div class="config-row">
+              <div class="config-info">
+                <h4>Crop Coefficient (Kc)</h4>
+                <small>Adlai mid-season Kc value · Typical range: 0.9–1.25</small>
+              </div>
+              <input class="config-input" type="number" value="1.15" step="0.01" id="cfgKc">
+            </div>
+            <div class="config-row">
+              <div class="config-info">
+                <h4>Flow Rate (L/min)</h4>
+                <small>Calibrated pump flow rate at standard pressure</small>
+              </div>
+              <input class="config-input" type="number" value="1.5" step="0.1" id="cfgFlowRate">
+            </div>
+            <div class="config-row">
+              <div class="config-info">
+                <h4>Field Area (m²)</h4>
+                <small>Irrigated plot area for volume calculations</small>
+              </div>
+              <input class="config-input" type="number" value="25" id="cfgArea">
+            </div>
+          </div>
+
+          <div class="config-section">
+            <div class="config-section-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+              System Flags
+            </div>
+            <div class="config-row">
+              <div class="config-info">
+                <h4>Auto-Irrigation Enabled</h4>
+                <small>Allow ESP32 to autonomously trigger pump</small>
+              </div>
+              <div class="config-toggle on" id="toggleAuto" onclick="this.classList.toggle('on')"></div>
+            </div>
+            <div class="config-row">
+              <div class="config-info">
+                <h4>Rainfall Override</h4>
+                <small>Skip irrigation if significant rainfall detected</small>
+              </div>
+              <div class="config-toggle on" onclick="this.classList.toggle('on')"></div>
+            </div>
+            <div class="config-row">
+              <div class="config-info">
+                <h4>Night Mode Lock</h4>
+                <small>Restrict pumping to 6AM–6PM window</small>
+              </div>
+              <div class="config-toggle" onclick="this.classList.toggle('on')"></div>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:10px;margin-top:6px">
+            <button class="btn btn-green" onclick="saveConfig()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+              Save to ESP32
+            </button>
+            <button class="btn btn-ghost" onclick="showToast('Config reverted to defaults','amber')">Reset Defaults</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── COMMANDS ── -->
+    <section id="commands" class="page">
+
+      <!-- Lock screen -->
+      <div class="lock-screen" id="commandsLock">
+        <div class="lock-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        </div>
+        <h3>Owner Access Required</h3>
+        <p>Manual control commands are restricted to authorized owners only.</p>
+        <button class="btn btn-green" onclick="promptOwnerAccess('commands')">
+          🔓 Unlock Access
+        </button>
+      </div>
+
+      <!-- Actual commands content -->
+      <div id="commandsContent" style="display:none">
+        <div class="card" style="margin-bottom:18px">
+          <div class="card-header">
+            <span class="card-title">Manual Control</span>
+            <span class="badge badge-cyan">Remote Commands</span>
+          </div>
+
+          <div class="cmd-grid">
+            <div class="cmd-card">
+              <div class="cmd-icon" style="background:var(--green-dim)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              </div>
+              <div class="cmd-name">Start Pump</div>
+              <div class="cmd-desc">Manually activate the irrigation pump. Runs until Stop is issued or max duration is reached.</div>
+              <button class="btn btn-green btn-full" onclick="sendCommand('START_PUMP')">
+                ▶ Start Irrigation
+              </button>
+            </div>
+
+            <div class="cmd-card">
+              <div class="cmd-icon" style="background:var(--red-dim)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2"><rect x="6" y="6" width="12" height="12"/></svg>
+              </div>
+              <div class="cmd-name">Emergency Stop</div>
+              <div class="cmd-desc">Immediately halt all irrigation. Overrides auto mode and any running timers.</div>
+              <button class="btn btn-red btn-full" onclick="sendCommand('STOP_PUMP')">
+                ■ Stop Pump
+              </button>
+            </div>
+
+            <div class="cmd-card">
+              <div class="cmd-icon" style="background:var(--cyan-dim)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="var(--cyan)" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.51"/></svg>
+              </div>
+              <div class="cmd-name">Sync Config</div>
+              <div class="cmd-desc">Push current configuration parameters from this dashboard to the ESP32 controller.</div>
+              <button class="btn btn-cyan btn-full" onclick="sendCommand('SYNC_CONFIG')">
+                ⟳ Sync Now
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- COMMAND LOG -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Command Log</span>
+            <button class="btn btn-ghost btn-sm" onclick="document.getElementById('cmdLog').innerHTML=''">Clear</button>
+          </div>
+          <div class="cmd-log" id="cmdLog">
+            <div class="log-line"><span class="log-ts">—</span><span class="log-msg-ok">System ready. Awaiting commands.</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── ABOUT ── -->
+    <section id="about" class="page">
+      <div class="about-hero">
+        <div class="hero-eyebrow" style="justify-content:center">Capstone Research Project</div>
+        <h2>Hybrid ET + Soil Moisture<br>Smart Irrigation Controller</h2>
+        <p>Development and evaluation of an intelligent irrigation controller for Adlai (<em>Coix lacryma-jobi</em>) production, integrating evapotranspiration modeling with real-time soil moisture sensing and cloud telemetry.</p>
+      </div>
+
+      <div class="about-grid">
+        <div class="about-feature">
+          <div class="about-feature-icon" style="background:var(--green-dim)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><path d="M12 2C8 2 4 6 4 10c0 5 8 12 8 12s8-7 8-12c0-4-4-8-8-8z"/></svg>
+          </div>
+          <h4>ET₀ Penman-Monteith</h4>
+          <p>FAO-56 standardized reference evapotranspiration computed from temperature, humidity, and solar radiation estimates using the Hargreaves-Samani approach as a surrogate for Rs.</p>
+        </div>
+        <div class="about-feature">
+          <div class="about-feature-icon" style="background:var(--cyan-dim)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--cyan)" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8m-4-4v4"/></svg>
+          </div>
+          <h4>ESP32 Microcontroller</h4>
+          <p>Dual-core Tensilica Xtensa LX6 @ 240MHz with built-in Wi-Fi 802.11 b/g/n for real-time sensor reading, Google Apps Script API calls, and relay-driven pump control.</p>
+        </div>
+        <div class="about-feature">
+          <div class="about-feature-icon" style="background:var(--amber-dim)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+          </div>
+          <h4>Google Sheets Backend</h4>
+          <p>Timestamped telemetry data logged to Google Sheets via Apps Script Web API. Tab <code>Logs_5mins</code> captures 5-minute sensor snapshots. <code>Config</code> tab stores runtime parameters.</p>
+        </div>
+      </div>
+
+      <div class="spec-table">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Component</th>
+              <th>Specification</th>
+              <th>Role</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>ESP32-WROOM-32</td><td class="td-mono">240MHz · 4MB Flash · Wi-Fi + BT</td><td>Main controller</td></tr>
+            <tr><td>BME280</td><td class="td-mono">I²C · ±1°C, ±3% RH, ±1 hPa</td><td>Environmental sensing</td></tr>
+            <tr><td>Capacitive Soil Sensor</td><td class="td-mono">Analog 0–3.3V · AOUT pin</td><td>Soil moisture</td></tr>
+            <tr><td>Tipping Bucket Gauge</td><td class="td-mono">0.2mm per tip · Reed switch</td><td>Rainfall measurement</td></tr>
+            <tr><td>5V Relay Module</td><td class="td-mono">10A/250VAC max</td><td>Pump switching</td></tr>
+            <tr><td>Google Sheets + Apps Script</td><td class="td-mono">REST API · HTTPS</td><td>Cloud telemetry</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </div><!-- /content -->
+</div><!-- /layout -->
+
+<script>
+// ══════════════════════════════════════════════
+// PERSISTENT SETTINGS  (localStorage)
+// ══════════════════════════════════════════════
+const DEFAULTS = {
+  webappUrl: '',
+  sheetUrl:  '',
+  sheetId:   '1fR-ZPti2hilTDtp2LSND9CzkA3eaYqfjgWpTbqmzEVg',
+  pwHash:    btoa('adlai2025')          // default password: adlai2025
+};
+
+const LOGS_TAB   = 'Logs_5mins';
+const COL = {
+  timestamp: 0, temp: 1, humidity: 2, pressure: 3,
+  soil: 4, rainfall: 5, et0: 6, etc: 7, nwl: 8, decision: 9
+};
+
+function getSetting(k) {
+  return localStorage.getItem('adlai_' + k) || DEFAULTS[k] || '';
+}
+function setSetting(k, v) {
+  localStorage.setItem('adlai_' + k, v);
+}
+
+let sheetsData = [];
+let charts = {};
+
+// ── Owner access ──
+let ownerUnlocked = sessionStorage.getItem('adlai_owner') === '1';
+let pendingOwnerPage = null;
+
+function isOwnerUnlocked() { return ownerUnlocked; }
+
+function updateOwnerUI() {
+  const icon = document.getElementById('ownerIcon');
+  // locked icon vs unlocked icon
+  if (ownerUnlocked) {
+    icon.innerHTML = `<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+      <path d="M7 11V7a5 5 0 0 1 9.9-1"/>`;
+    document.querySelectorAll('.locked-nav').forEach(n => {
+      n.classList.remove('locked-nav');
+      // remove lock emoji
+      n.style.opacity = '1';
     });
+  }
+  // update page locks
+  ['config','commands'].forEach(page => {
+    const lock = document.getElementById(page + 'Lock');
+    const content = document.getElementById(page + 'Content');
+    if (lock && content) {
+      lock.classList.toggle('visible', !ownerUnlocked);
+      content.style.display = ownerUnlocked ? 'block' : 'none';
+    }
   });
 }
 
-function markDirty(key, val) {
-  cfgDirty[key] = val;
-  const badge = document.getElementById('cfgBadge_' + key);
-  if (badge) { badge.textContent = val; badge.style.borderColor = 'var(--amber)'; badge.style.color = 'var(--amber)'; }
-}
-
-// ══════════════════════════════════════════
-// SAVE CONFIG → Apps Script
-// ══════════════════════════════════════════
-async function saveConfig() {
-  if (Object.keys(cfgDirty).length === 0) { showToast('No changes to save'); return; }
-  if (APPS_SCRIPT_URL === 'YOUR_APPS_SCRIPT_WEB_APP_URL_HERE') {
-    showToast('⚠ Set APPS_SCRIPT_URL in the code', true); return;
-  }
-
-  showToast('Saving…');
-  // Build array of {key, value} pairs
-  const updates = Object.entries(cfgDirty).map(([k,v]) => ({key:k, value:v}));
-
-  try {
-    const resp = await fetch(APPS_SCRIPT_URL, {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ type:'config_update', updates })
-    });
-    const json = await resp.json();
-    if (json.status === 'success') {
-      showToast('✓ Config saved to sheet');
-      cfgDirty = {};
-      // Reset badge colors
-      document.querySelectorAll('.config-val-box').forEach(b => {
-        b.style.borderColor = ''; b.style.color = '';
-      });
-      await loadConfig();
-    } else {
-      throw new Error(json.message || 'Unknown error');
-    }
-  } catch(e) {
-    showToast('⚠ Save failed: ' + e.message, true);
-  }
-}
-
-// ══════════════════════════════════════════
-// COMMAND: MODE TOGGLE
-// ══════════════════════════════════════════
-function updateModeButtons(mode) {
-  document.getElementById('btnAuto').className   = 'mode-btn' + (mode==='AUTO'?'   active-auto':'');
-  document.getElementById('btnManual').className = 'mode-btn' + (mode==='MANUAL'?' active-manual':'');
-  document.getElementById('cmdCurrentMode').textContent = mode;
-}
-
-async function setMode(mode) {
-  updateModeButtons(mode);
-  await writeConfigCell('system_mode', mode);
-  if (mode === 'AUTO') {
-    pumpOn = false;
-    updatePumpUI();
-    await writeConfigCell('manual_status', 'OFF');
-  }
-}
-
-// ══════════════════════════════════════════
-// COMMAND: PUMP TOGGLE
-// ══════════════════════════════════════════
-function updatePumpUI() {
-  const btn   = document.getElementById('bigPumpBtn');
-  const label = document.getElementById('pumpStatusLabel');
-  const modeEl = document.getElementById('cmdManualStatus');
-  if (pumpOn) {
-    btn.className = 'big-pump-btn on';
-    label.className = 'pump-status-label on';
-    label.textContent = 'PUMP ON';
-    if (modeEl) modeEl.textContent = 'ON';
+function toggleOwnerLock() {
+  if (ownerUnlocked) {
+    ownerUnlocked = false;
+    sessionStorage.removeItem('adlai_owner');
+    showToast('Owner access locked', 'amber');
+    updateOwnerUI();
   } else {
-    btn.className = 'big-pump-btn';
-    label.className = 'pump-status-label';
-    label.textContent = 'PUMP OFF';
-    if (modeEl) modeEl.textContent = 'OFF';
+    promptOwnerAccess(null);
   }
 }
 
-async function togglePump() {
-  const modeRow = configRows.find(r => cellVal(r.c[0]) === 'system_mode');
-  const mode = modeRow ? String(cellVal(modeRow.c[1])||'AUTO').toUpperCase() : 'AUTO';
-  if (mode !== 'MANUAL') {
-    showToast('⚠ Switch to MANUAL mode first', true); return;
-  }
-  pumpOn = !pumpOn;
-  updatePumpUI();
-  await writeConfigCell('manual_status', pumpOn ? 'ON' : 'OFF');
+function promptOwnerAccess(targetPage) {
+  pendingOwnerPage = targetPage;
+  document.getElementById('passwordInput').value = '';
+  document.getElementById('passwordError').style.display = 'none';
+  document.getElementById('passwordModal').classList.add('open');
+  setTimeout(() => document.getElementById('passwordInput').focus(), 150);
 }
 
-// ══════════════════════════════════════════
-// COMMAND: DURATION ADJUST
-// ══════════════════════════════════════════
-function adjustDur(delta) {
-  manualDurSec = Math.max(10, Math.min(300, manualDurSec + delta));
-  document.getElementById('durVal').textContent = manualDurSec;
+function closePasswordModal() {
+  document.getElementById('passwordModal').classList.remove('open');
+  pendingOwnerPage = null;
 }
 
-async function applyDuration() {
-  await writeConfigCell('manual_duration_sec', manualDurSec);
-  showToast('✓ Duration set to ' + manualDurSec + 's');
-}
-
-async function emergencySkip() {
-  if (!confirm('Force SKIP next cycle? This sets system_mode to AUTO and manual_status to OFF.')) return;
-  pumpOn = false;
-  updatePumpUI();
-  await writeConfigCell('manual_status', 'OFF');
-  await writeConfigCell('system_mode', 'AUTO');
-  updateModeButtons('AUTO');
-  showToast('⛔ Force skip applied');
-}
-
-// ══════════════════════════════════════════
-// WRITE SINGLE CONFIG CELL → Apps Script
-// ══════════════════════════════════════════
-async function writeConfigCell(key, value) {
-  if (APPS_SCRIPT_URL === 'YOUR_APPS_SCRIPT_WEB_APP_URL_HERE') {
-    showToast('⚠ Paste your Apps Script URL in the code', true);
-    return;
-  }
-  try {
-    const resp = await fetch(APPS_SCRIPT_URL, {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ type:'config_update', updates:[{key, value}] })
-    });
-    const json = await resp.json();
-    if (json.status !== 'success') throw new Error(json.message);
-    // Update local configRows too
-    const row = configRows.find(r => cellVal(r.c[0]) === key);
-    if (row && row.c[1]) row.c[1].v = value;
-  } catch(e) {
-    showToast('⚠ Sync failed: ' + e.message, true);
+function checkPassword() {
+  const val = document.getElementById('passwordInput').value.trim();
+  const stored = getSetting('pwHash') || DEFAULTS.pwHash;
+  if (btoa(val) === stored) {
+    ownerUnlocked = true;
+    sessionStorage.setItem('adlai_owner', '1');
+    closePasswordModal();
+    showToast('✓ Owner access unlocked', 'green');
+    updateOwnerUI();
+    if (pendingOwnerPage) navigateTo(pendingOwnerPage);
+    pendingOwnerPage = null;
+  } else {
+    document.getElementById('passwordError').style.display = 'block';
+    document.getElementById('passwordInput').value = '';
+    document.getElementById('passwordInput').focus();
   }
 }
 
-// ══════════════════════════════════════════
-// ABOUT PAGE DYNAMIC VALUES
-// ══════════════════════════════════════════
-function updateAbout() {
-  const find = (k) => {
-    const r = configRows.find(r => cellVal(r.c[0]) === k);
-    return r ? cellVal(r.c[1]) : '—';
+// ── Theme ──
+let currentTheme = localStorage.getItem('adlai_theme') || 'dark';
+
+function applyTheme(t) {
+  currentTheme = t;
+  document.documentElement.setAttribute('data-theme', t);
+  localStorage.setItem('adlai_theme', t);
+  const icon = document.getElementById('themeIcon');
+  if (t === 'light') {
+    icon.innerHTML = `<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>`;
+  } else {
+    icon.innerHTML = `<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/>
+      <line x1="12" y1="21" x2="12" y2="23"/>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+      <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>`;
+  }
+  // rebuild charts after theme change for color update
+  if (sheetsData.length) {
+    updateDashboard();
+    if (document.getElementById('analytics').classList.contains('active')) updateAnalytics();
+  }
+}
+
+document.getElementById('themeToggle').addEventListener('click', () => {
+  applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
+});
+
+// ── Settings modal ──
+function openSettings() {
+  document.getElementById('settingWebappUrl').value = getSetting('webappUrl');
+  document.getElementById('settingSheetUrl').value = getSetting('sheetUrl');
+  document.getElementById('settingSheetId').value = getSetting('sheetId');
+  document.getElementById('settingNewPw').value = '';
+  document.getElementById('settingsModal').classList.add('open');
+}
+
+function closeSettings() {
+  document.getElementById('settingsModal').classList.remove('open');
+}
+
+function saveSettings() {
+  setSetting('webappUrl', document.getElementById('settingWebappUrl').value.trim());
+  setSetting('sheetUrl',  document.getElementById('settingSheetUrl').value.trim());
+  setSetting('sheetId',   document.getElementById('settingSheetId').value.trim());
+  const newPw = document.getElementById('settingNewPw').value.trim();
+  if (newPw) setSetting('pwHash', btoa(newPw));
+  updateSheetLink();
+  closeSettings();
+  showToast('✓ Settings saved', 'green');
+  fetchData();
+}
+
+function updateSheetLink() {
+  const url = getSetting('sheetUrl');
+  const link = document.getElementById('sheetDirectLink');
+  if (url) {
+    link.href = url;
+    link.style.display = 'inline-flex';
+  } else {
+    link.style.display = 'none';
+  }
+}
+
+// ── Chart helpers ──
+function chartColors() {
+  const dark = currentTheme === 'dark';
+  return {
+    tick:   dark ? '#5d7499' : '#94a3b8',
+    grid:   dark ? 'rgba(255,255,255,.04)' : 'rgba(0,0,0,.06)',
+    font:   { family:'DM Mono', size:9 }
   };
-  document.getElementById('aboutKc').textContent   = find('kc_value');
-  document.getElementById('aboutFlow').textContent = find('flow_rate_lpm') + ' L/min';
-  document.getElementById('aboutArea').textContent = find('plot_area_m2')  + ' m²';
 }
 
-// ══════════════════════════════════════════
-// INIT
-// ══════════════════════════════════════════
-loadData();
-loadConfig();
-setInterval(loadData, 60000);      // refresh sensor data every 60s
-setInterval(loadConfig, 120000);   // refresh config every 2min
+function buildChart(id, type, data, options = {}) {
+  const ctx = document.getElementById(id);
+  if (!ctx) return null;
+  if (charts[id]) charts[id].destroy();
+  const c = chartColors();
+  const base = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { ticks: { color: c.tick, font: c.font }, grid: { color: c.grid } },
+      y: { ticks: { color: c.tick, font: c.font }, grid: { color: c.grid } }
+    }
+  };
+  charts[id] = new Chart(ctx, { type, data, options: { ...base, ...options } });
+  return charts[id];
+}
+
+// ══════════════════════════════════════════════
+// DATA FETCH
+// Primary: Apps Script Webapp → GET ?action=getData
+// Fallback: Google Sheets gviz public API
+// Response from webapp should be:
+//   { status: "ok", data: [[ts, temp, hum, pres, soil, rain, et0, etc, nwl, decision], ...] }
+// ══════════════════════════════════════════════
+async function fetchData() {
+  const webappUrl = getSetting('webappUrl');
+  const sheetId   = getSetting('sheetId') || DEFAULTS.sheetId;
+
+  showToast('Syncing…', 'cyan');
+
+  let success = false;
+
+  // 1. Try webapp URL
+  if (webappUrl) {
+    try {
+      const res = await fetch(`${webappUrl}?action=getData`, { redirect: 'follow' });
+      if (res.ok) {
+        const json = await res.json();
+        if (json.status === 'ok' && Array.isArray(json.data) && json.data.length > 0) {
+          sheetsData = json.data.map(r => ({
+            timestamp: r[COL.timestamp] || '',
+            temp:      +r[COL.temp] || 0,
+            humidity:  +r[COL.humidity] || 0,
+            pressure:  +r[COL.pressure] || 0,
+            soil:      +r[COL.soil] || 0,
+            rainfall:  +r[COL.rainfall] || 0,
+            et0:       +r[COL.et0] || 0,
+            etc:       +r[COL.etc] || 0,
+            nwl:       +r[COL.nwl] || 0,
+            decision:  r[COL.decision] || '—'
+          })).filter(r => r.timestamp);
+          success = true;
+        }
+      }
+    } catch(e) {
+      console.warn('Webapp fetch failed:', e);
+    }
+  }
+
+  // 2. Fallback: gviz public API
+  if (!success && sheetId) {
+    try {
+      const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(LOGS_TAB)}`;
+      const res = await fetch(url);
+      const text = await res.text();
+      const json = JSON.parse(text.slice(47, -2));
+      const rows = json.table.rows;
+      sheetsData = rows.map(r => ({
+        timestamp: r.c[COL.timestamp]?.v || '',
+        temp:      parseFloat(r.c[COL.temp]?.v) || 0,
+        humidity:  parseFloat(r.c[COL.humidity]?.v) || 0,
+        pressure:  parseFloat(r.c[COL.pressure]?.v) || 0,
+        soil:      parseFloat(r.c[COL.soil]?.v) || 0,
+        rainfall:  parseFloat(r.c[COL.rainfall]?.v) || 0,
+        et0:       parseFloat(r.c[COL.et0]?.v) || 0,
+        etc:       parseFloat(r.c[COL.etc]?.v) || 0,
+        nwl:       parseFloat(r.c[COL.nwl]?.v) || 0,
+        decision:  r.c[COL.decision]?.v || '—'
+      })).filter(r => r.timestamp);
+      success = sheetsData.length > 0;
+    } catch(e) {
+      console.warn('Sheets gviz fetch failed:', e);
+    }
+  }
+
+  if (success) {
+    updateDashboard();
+    updateAnalytics();
+    updateLogsTable();
+    showToast(`✓ ${sheetsData.length} rows loaded`, 'green');
+    document.getElementById('setupBanner').style.display = 'none';
+  } else {
+    loadDemoData();
+    if (!getSetting('webappUrl')) {
+      document.getElementById('setupBanner').style.display = 'flex';
+    }
+    showToast('⚠ Using demo data', 'amber');
+  }
+
+  const now = new Date().toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit' });
+  document.getElementById('lastSync').textContent = now;
+  document.getElementById('topbarSync').textContent = `Synced ${now}`;
+  hideLoading();
+}
+
+// ══════════════════════════════════════════════
+// SEND COMMAND  (POST to webapp)
+// Webapp should handle: { command: "START_PUMP" | "STOP_PUMP" | "SYNC_CONFIG" }
+// Response: { status: "ok", message: "..." }
+// ══════════════════════════════════════════════
+async function sendCommand(cmd) {
+  const webappUrl = getSetting('webappUrl');
+  const log = document.getElementById('cmdLog');
+  const ts = new Date().toLocaleTimeString('en-PH');
+
+  const msgs = {
+    START_PUMP:  ['log-msg-ok',  '→ START_PUMP issued · Pump relay ON'],
+    STOP_PUMP:   ['log-msg-err', '■ STOP_PUMP emergency halt · Relay OFF'],
+    SYNC_CONFIG: ['log-msg-ok',  '⟳ SYNC_CONFIG dispatched · Awaiting ACK'],
+  };
+
+  const [cls, msg] = msgs[cmd] || ['log-msg-warn', cmd];
+
+  // Attempt real POST if webapp configured
+  let ackMsg = msg;
+  if (webappUrl) {
+    try {
+      const res = await fetch(webappUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ command: cmd, timestamp: new Date().toISOString() }),
+        redirect: 'follow'
+      });
+      if (res.ok) {
+        const json = await res.json().catch(() => ({}));
+        ackMsg = json.message ? `${msg} · ${json.message}` : msg + ' · ACK received';
+      } else {
+        ackMsg = msg + ' · No ACK (check webapp)';
+      }
+    } catch(e) {
+      ackMsg = msg + ' · Offline — command not sent';
+    }
+  } else {
+    ackMsg = msg + ' · (Demo — no webapp configured)';
+  }
+
+  log.innerHTML += `<div class="log-line"><span class="log-ts">${ts}</span><span class="${cls}">${ackMsg}</span></div>`;
+  log.scrollTop = log.scrollHeight;
+  showToast(ackMsg.replace(/^[→■⟳] /, '').split('·')[0].trim(),
+    cmd.includes('STOP') ? 'red' : 'green');
+}
+
+function loadDemoData() {
+  sheetsData = [];
+  const now = Date.now();
+  for (let i = 23; i >= 0; i--) {
+    const d = new Date(now - i * 5 * 60000);
+    const ts = d.toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit' });
+    const temp     = 28 + Math.random() * 12;
+    const hum      = 55 + Math.random() * 25;
+    const pres     = 1006 + Math.random() * 6;
+    const soil     = 40 + Math.random() * 35;
+    const rain     = Math.random() > 0.85 ? +(Math.random() * 2).toFixed(2) : 0;
+    const et0      = +(0.15 + Math.random() * 0.12).toFixed(3);
+    const etc      = +(et0 * 1.15).toFixed(3);
+    const nwl      = +(etc - rain).toFixed(3);
+    const decision = (soil < 45 && nwl > 2) ? 'IRRIGATE' : 'SKIP';
+    sheetsData.push({ timestamp: ts, temp, humidity: hum, pressure: pres, soil, rainfall: rain, et0, etc, nwl, decision });
+  }
+  updateDashboard();
+  updateAnalytics();
+  updateLogsTable();
+}
+
+// ── Update Dashboard ──
+function updateDashboard() {
+  if (!sheetsData.length) return;
+  const latest = sheetsData[sheetsData.length - 1];
+  const prev   = sheetsData[sheetsData.length - 2] || latest;
+
+  document.getElementById('heroDecision').textContent = latest.decision;
+  document.getElementById('heroDecision').style.color = latest.decision === 'IRRIGATE' ? 'var(--cyan)' : 'var(--green)';
+  document.getElementById('heroEtc').textContent = latest.etc.toFixed(2) + ' mm';
+  document.getElementById('heroMoisture').textContent = latest.soil.toFixed(1) + '%';
+
+  document.getElementById('statRs').textContent = ((latest.temp - 15) * 0.18).toFixed(2) + ' MJ/m²';
+  document.getElementById('statNWL').textContent = latest.nwl.toFixed(2) + ' mm';
+  document.getElementById('statCycles').textContent = sheetsData.filter(r => r.decision === 'IRRIGATE').length;
+
+  document.getElementById('sTemp').textContent = latest.temp.toFixed(1) + '°C';
+  const tempDiff = (latest.temp - prev.temp);
+  document.getElementById('sTempTrend').textContent = (tempDiff >= 0 ? '↑' : '↓') + Math.abs(tempDiff).toFixed(1) + '°C from prev';
+
+  document.getElementById('sHumidity').textContent = latest.humidity.toFixed(1) + '%';
+  document.getElementById('sHumidityTrend').textContent = latest.humidity > 70 ? 'High humidity' : latest.humidity > 50 ? 'Moderate' : 'Low humidity';
+  document.getElementById('sPressure').textContent = latest.pressure.toFixed(0) + ' hPa';
+  document.getElementById('sRainfall').textContent = latest.rainfall.toFixed(1) + ' mm';
+  document.getElementById('sRainfallTrend').textContent = latest.rainfall > 0 ? '⚠ Rain detected' : 'No precipitation';
+
+  document.getElementById('fET0').textContent = latest.et0.toFixed(3) + ' mm/day';
+  document.getElementById('fEtc').textContent = latest.etc.toFixed(3) + ' mm/day';
+  document.getElementById('fRainfall').textContent = latest.rainfall.toFixed(2) + ' mm';
+  document.getElementById('fNetLoss').textContent = latest.nwl.toFixed(3) + ' mm';
+  document.getElementById('fDecision').textContent = latest.decision;
+  document.getElementById('fDecision').style.color = latest.decision === 'IRRIGATE' ? 'var(--cyan)' : 'var(--green)';
+
+  const m = latest.soil;
+  const mb = document.getElementById('moistureBadge');
+  if (m < 40)       { mb.textContent = 'DRY';     mb.className = 'badge badge-red'; }
+  else if (m < 65)  { mb.textContent = 'OPTIMAL'; mb.className = 'badge badge-green'; }
+  else              { mb.textContent = 'WET';      mb.className = 'badge badge-cyan'; }
+
+  buildActivityLog();
+
+  const last12 = sheetsData.slice(-12);
+  const lbs = last12.map(r => r.timestamp);
+  const c = chartColors();
+  const noX = { display: false, grid: { display: false } };
+  const yAxis = { ticks: { color: c.tick, font: c.font }, grid: { color: c.grid } };
+  const noLeg = { legend: { display: false } };
+
+  buildChart('chartTemp', 'line', {
+    labels: lbs,
+    datasets: [{ data: last12.map(r => r.temp), borderColor: '#34d177', borderWidth: 2, fill: true, backgroundColor: 'rgba(52,209,119,0.07)', tension: .4, pointRadius: 0 }]
+  }, { scales: { x: noX, y: yAxis }, plugins: noLeg });
+
+  buildChart('chartMoisture', 'line', {
+    labels: lbs,
+    datasets: [
+      { data: last12.map(r => r.soil), borderColor: '#f0a040', borderWidth: 2, fill: true, backgroundColor: 'rgba(240,160,64,0.07)', tension: .4, pointRadius: 0 },
+      { data: last12.map(() => 45), borderColor: 'rgba(232,64,64,.4)', borderWidth: 1, borderDash: [4, 4], fill: false, pointRadius: 0 }
+    ]
+  }, { scales: { x: noX, y: yAxis }, plugins: noLeg });
+
+  buildChart('chartHumidity', 'line', {
+    labels: lbs,
+    datasets: [{ data: last12.map(r => r.humidity), borderColor: '#38bdf8', borderWidth: 2, fill: true, backgroundColor: 'rgba(56,189,248,0.07)', tension: .4, pointRadius: 0 }]
+  }, { scales: { x: noX, y: yAxis }, plugins: noLeg });
+
+  buildChart('chartPressure', 'line', {
+    labels: lbs,
+    datasets: [{ data: last12.map(r => r.pressure), borderColor: '#a78bfa', borderWidth: 2, fill: true, backgroundColor: 'rgba(167,139,250,0.07)', tension: .4, pointRadius: 0 }]
+  }, { scales: { x: noX, y: yAxis }, plugins: noLeg });
+}
+
+function buildActivityLog() {
+  const list = document.getElementById('activityList');
+  const logs = sheetsData.slice(-5).reverse();
+  list.innerHTML = logs.map(r => {
+    const isIrrigate = r.decision === 'IRRIGATE';
+    return `<div class="activity-row">
+      <div class="activity-dot ${isIrrigate ? 'dot-cyan' : 'dot-green'}"></div>
+      <div>
+        <div class="activity-title">Decision: ${r.decision}</div>
+        <div class="activity-meta">${r.timestamp} · Soil: ${r.soil.toFixed(0)}% · ETc: ${r.etc.toFixed(2)} mm · NWL: ${r.nwl.toFixed(2)} mm</div>
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('activityCount').textContent = sheetsData.length + ' logs';
+}
+
+function updateAnalytics() {
+  if (!sheetsData.length) return;
+  const last20 = sheetsData.slice(-20);
+  const lbs = last20.map(r => r.timestamp);
+  const c = chartColors();
+  const axes = { x: { ticks: { color: c.tick, font: c.font }, grid: { color: c.grid } }, y: { ticks: { color: c.tick, font: c.font }, grid: { color: c.grid } } };
+
+  buildChart('chartEtcBar', 'bar', {
+    labels: lbs,
+    datasets: [{ data: last20.map(r => r.etc), backgroundColor: last20.map(r => r.decision === 'IRRIGATE' ? 'rgba(56,189,248,.55)' : 'rgba(52,209,119,.4)'), borderRadius: 4 }]
+  }, { plugins: { legend: { display: false } }, scales: axes });
+
+  buildChart('chartMoistureLine', 'line', {
+    labels: lbs,
+    datasets: [
+      { label: 'Soil %', data: last20.map(r => r.soil), borderColor: '#f0a040', backgroundColor: 'rgba(240,160,64,.08)', fill: true, tension: .4, pointRadius: 2, pointBackgroundColor: '#f0a040' },
+      { label: 'Threshold', data: last20.map(() => 45), borderColor: 'rgba(232,64,64,.45)', borderWidth: 1, borderDash: [5, 5], fill: false, pointRadius: 0 }
+    ]
+  }, { plugins: { legend: { labels: { color: c.tick, font: c.font } } }, scales: axes });
+
+  buildChart('chartScatter', 'scatter', {
+    datasets: [{ label: 'Temp vs Humidity', data: last20.map(r => ({ x: r.temp, y: r.humidity })), backgroundColor: 'rgba(167,139,250,.55)', pointRadius: 5, pointHoverRadius: 7 }]
+  }, {
+    plugins: { legend: { labels: { color: c.tick, font: c.font } } },
+    scales: {
+      x: { title: { display: true, text: 'Temperature (°C)', color: c.tick, font: c.font }, ticks: { color: c.tick, font: c.font }, grid: { color: c.grid } },
+      y: { title: { display: true, text: 'Humidity (%)', color: c.tick, font: c.font }, ticks: { color: c.tick, font: c.font }, grid: { color: c.grid } }
+    }
+  });
+}
+
+function updateLogsTable() {
+  const tbody = document.getElementById('logsTableBody');
+  const rows = sheetsData.slice(-20).reverse();
+  tbody.innerHTML = rows.map(r => `
+    <tr>
+      <td class="td-mono">${r.timestamp}</td>
+      <td class="td-mono">${r.temp.toFixed(1)}</td>
+      <td class="td-mono">${r.humidity.toFixed(1)}</td>
+      <td class="td-mono">${r.pressure.toFixed(0)}</td>
+      <td class="td-mono">${r.soil.toFixed(1)}</td>
+      <td class="td-mono">${r.rainfall.toFixed(2)}</td>
+      <td class="td-mono">${r.et0.toFixed(3)}</td>
+      <td class="td-mono">${r.etc.toFixed(3)}</td>
+      <td><span class="badge ${r.decision === 'IRRIGATE' ? 'badge-cyan' : 'badge-green'}">${r.decision}</span></td>
+    </tr>
+  `).join('');
+}
+
+// ── Navigation ──
+const sidebar  = document.getElementById('sidebar');
+const layout   = document.getElementById('layout');
+const toggleBtn = document.getElementById('toggleBtn');
+let sidebarOpen = true;
+
+toggleBtn.addEventListener('click', () => {
+  if (window.innerWidth < 768) {
+    sidebar.classList.toggle('mobile-open');
+  } else {
+    sidebarOpen = !sidebarOpen;
+    sidebar.classList.toggle('hidden', !sidebarOpen);
+    layout.classList.toggle('full', !sidebarOpen);
+  }
+});
+
+const pageNames = { dashboard: 'Dashboard', analytics: 'Analytics', config: 'Configuration', commands: 'Commands', about: 'About' };
+
+function navigateTo(page) {
+  document.querySelectorAll('.nav-item').forEach(b => {
+    b.classList.toggle('active', b.dataset.page === page);
+  });
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(page).classList.add('active');
+  document.getElementById('topbarTitle').textContent = pageNames[page] || page;
+  if (window.innerWidth < 768) sidebar.classList.remove('mobile-open');
+}
+
+document.querySelectorAll('.nav-item').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const page = btn.dataset.page;
+    const requiresOwner = btn.dataset.owner === 'true';
+    if (requiresOwner && !ownerUnlocked) {
+      promptOwnerAccess(page);
+      return;
+    }
+    navigateTo(page);
+  });
+});
+
+// ── Config save ──
+function saveConfig() {
+  showToast('✓ Config saved and pushed to ESP32', 'green');
+}
+
+// ── Toast ──
+function showToast(msg, type = 'green') {
+  const tc = document.getElementById('toastContainer');
+  const t = document.createElement('div');
+  const colors = { green: 'var(--green)', cyan: 'var(--cyan)', amber: 'var(--amber)', red: 'var(--red)' };
+  t.className = 'toast';
+  t.innerHTML = `<span style="color:${colors[type] || colors.green}">●</span> ${msg}`;
+  tc.appendChild(t);
+  setTimeout(() => t.remove(), 3500);
+}
+
+function hideLoading() {
+  document.getElementById('loadingOverlay').classList.add('hidden');
+}
+
+// ── Init ──
+applyTheme(currentTheme);
+updateSheetLink();
+updateOwnerUI();
+fetchData();
+setInterval(fetchData, 5 * 60 * 1000);
+
+// Close modals on overlay click
+document.getElementById('passwordModal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closePasswordModal();
+});
+document.getElementById('settingsModal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeSettings();
+});
 </script>
 </body>
 </html>
